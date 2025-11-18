@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   app:
     build: .
@@ -12,12 +11,8 @@ services:
       - farmacia_clinica
     depends_on:
       - db
-      - redis
     environment:
       - APACHE_DOCUMENT_ROOT=/var/www/html/public
-      - PHP_MEMORY_LIMIT=512M
-      - PHP_UPLOAD_MAX_FILESIZE=100M
-      - PHP_POST_MAX_SIZE=100M
     command: >
       sh -c "a2enmod rewrite &&
              sed -ri -e 's!/var/www/html!$${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf &&
@@ -30,46 +25,16 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-farmacia_clinica}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root_secure_2024}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
       MYSQL_USER: ${DB_USERNAME:-farmacia_admin}
       MYSQL_PASSWORD: ${DB_PASSWORD:-farmacia_2024}
     volumes:
       - dbdata:/var/lib/mysql
-      - ./database/backups:/backups
     ports:
       - "3309:3306"
     networks:
       - farmacia_clinica
-    command: --default-authentication-plugin=mysql_native_password --max_allowed_packet=256M
-
-  redis:
-    image: redis:7-alpine
-    container_name: farmacia-clinica-redis
-    restart: unless-stopped
-    ports:
-      - "6380:6379"
-    volumes:
-      - redisdata:/data
-    networks:
-      - farmacia_clinica
-    command: redis-server --appendonly yes
-
-  phpmyadmin:
-    image: phpmyadmin:latest
-    container_name: farmacia-clinica-phpmyadmin
-    restart: unless-stopped
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_USER: root
-      PMA_PASSWORD: ${DB_PASSWORD:-root_secure_2024}
-      UPLOAD_LIMIT: 100M
-    ports:
-      - "8081:80"
-    networks:
-      - farmacia_clinica
-    depends_on:
-      - db
+    command: --default-authentication-plugin=mysql_native_password
 
 networks:
   farmacia_clinica:
@@ -77,6 +42,3 @@ networks:
 
 volumes:
   dbdata:
-    driver: local
-  redisdata:
-    driver: local
