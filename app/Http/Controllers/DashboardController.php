@@ -495,7 +495,6 @@ class DashboardController extends Controller
         return Inventory::with('product')
             ->whereColumn('quantity', '<=', 'minimum_stock')
             ->where('quantity', '>', 0)
-            ->where('active', true)
             ->orderBy('quantity')
             ->limit(10)
             ->get();
@@ -512,7 +511,6 @@ class DashboardController extends Controller
             ->whereNotNull('expiration_date')
             ->where('expiration_date', '<=', $fechaLimite)
             ->where('expiration_date', '>=', Carbon::now())
-            ->where('active', true)
             ->orderBy('expiration_date')
             ->limit(10)
             ->get();

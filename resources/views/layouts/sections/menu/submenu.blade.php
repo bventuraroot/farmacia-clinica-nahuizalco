@@ -8,20 +8,33 @@
       $active = $configData["layout"] === 'vertical' ? 'active open':'active';
       $currentRouteName =  Route::currentRouteName();
 
-      if ($currentRouteName === $submenu->slug) {
-          $activeClass = 'active';
-      }
-      elseif (isset($submenu->submenu)) {
-        if (gettype($submenu->slug) === 'array') {
-          foreach($submenu->slug as $slug){
-            if (str_contains($currentRouteName,$slug) and strpos($currentRouteName,$slug) === 0) {
-                $activeClass = $active;
+      // Verificar si el submenu tiene slug antes de acceder
+      if (isset($submenu->slug)) {
+        if ($currentRouteName === $submenu->slug) {
+            $activeClass = 'active';
+        }
+        elseif (isset($submenu->submenu)) {
+          if (gettype($submenu->slug) === 'array') {
+            foreach($submenu->slug as $slug){
+              if (str_contains($currentRouteName,$slug) and strpos($currentRouteName,$slug) === 0) {
+                  $activeClass = $active;
+              }
+            }
+          }
+          else{
+            if (str_contains($currentRouteName,$submenu->slug) and strpos($currentRouteName,$submenu->slug) === 0) {
+              $activeClass = $active;
             }
           }
         }
-        else{
-          if (str_contains($currentRouteName,$submenu->slug) and strpos($currentRouteName,$submenu->slug) === 0) {
+      }
+      // Si no tiene slug pero tiene submenu, verificar si algún hijo está activo
+      elseif (isset($submenu->submenu)) {
+        // Verificar recursivamente si algún submenu hijo está activo
+        foreach($submenu->submenu as $child) {
+          if (isset($child->slug) && $currentRouteName === $child->slug) {
             $activeClass = $active;
+            break;
           }
         }
       }

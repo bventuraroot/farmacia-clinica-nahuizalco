@@ -110,9 +110,11 @@ class MedicalConsultationController extends Controller
         $user = Auth::user();
         $validated['company_id'] = $request->company_id ?? $user->company_id ?? Company::first()->id;
         $validated['fecha_hora'] = now();
+        $validated['estado'] = 'en_curso'; // Estado inicial
         
         // Generar número de consulta único
-        $validated['numero_consulta'] = 'CONS-' . now()->format('Ymd') . '-' . str_pad(MedicalConsultation::count() + 1, 5, '0', STR_PAD_LEFT);
+        $lastNumber = MedicalConsultation::withTrashed()->count();
+        $validated['numero_consulta'] = 'CONS-' . now()->format('Ymd') . '-' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
         
         // Calcular IMC si hay peso y altura
         if (isset($validated['peso']) && isset($validated['altura']) && $validated['altura'] > 0) {
@@ -120,7 +122,18 @@ class MedicalConsultationController extends Controller
             $validated['imc'] = round($validated['peso'] / ($altura_metros * $altura_metros), 2);
         }
 
-        $consultation = MedicalConsultation::create($validated);
+        // Asegurar que los campos booleanos tengan valores
+        $validated['genera_receta'] = $request->has('genera_receta') ? true : false;
+        $validated['requiere_seguimiento'] = $request->has('requiere_seguimiento') ? true : false;
+
+        try {
+            $consultation = MedicalConsultation::create($validated);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la consulta: ' . $e->getMessage()
+            ], 422);
+        }
 
         // Si viene de una cita, actualizar el estado de la cita
         if ($validated['appointment_id']) {

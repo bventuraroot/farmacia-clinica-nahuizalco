@@ -86,22 +86,31 @@ class PatientController extends Controller
             'enfermedades_cronicas' => 'nullable|string',
         ]);
 
-        $user = Auth::user();
-        $validated['company_id'] = $request->company_id ?? $user->company_id ?? Company::first()->id;
-        
-        // Generar código de paciente único
-        $validated['codigo_paciente'] = 'PAC-' . strtoupper(uniqid());
-        
-        // Generar número de expediente único
-        $validated['numero_expediente'] = 'EXP-' . now()->format('Ymd') . '-' . str_pad(Patient::count() + 1, 5, '0', STR_PAD_LEFT);
+        try {
+            $user = Auth::user();
+            $validated['company_id'] = $request->company_id ?? $user->company_id ?? Company::first()->id;
+            $validated['estado'] = 'activo'; // Estado por defecto
+            
+            // Generar código de paciente único
+            $validated['codigo_paciente'] = 'PAC-' . strtoupper(uniqid());
+            
+            // Generar número de expediente único (usar withTrashed para evitar colisiones)
+            $lastNumber = Patient::withTrashed()->whereDate('created_at', now()->toDateString())->count();
+            $validated['numero_expediente'] = 'EXP-' . now()->format('Ymd') . '-' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
 
-        $patient = Patient::create($validated);
+            $patient = Patient::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Paciente creado exitosamente',
-            'patient' => $patient
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Paciente creado exitosamente',
+                'patient' => $patient
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el paciente: ' . $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
@@ -109,7 +118,16 @@ class PatientController extends Controller
      */
     public function show($id)
     {
-        $patient = Patient::with(['appointments', 'consultations', 'labOrders'])->findOrFail($id);
+        $patient = Patient::with([
+            'appointments.doctor',
+            'consultations.doctor',
+            'consultations' => function($query) {
+                $query->orderBy('fecha_hora', 'desc');
+            },
+            'labOrders.doctor',
+            'labOrders.exams.exam',
+            'medicalRecords'
+        ])->findOrFail($id);
         
         return view('clinic.patients.show', compact('patient'));
     }

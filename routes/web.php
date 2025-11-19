@@ -47,6 +47,8 @@ use App\Http\Controllers\MedicalConsultationController;
 
 // Módulos de Laboratorio
 use App\Http\Controllers\LabOrderController;
+use App\Http\Controllers\LabExamController;
+use App\Http\Controllers\LabExamCategoryController;
 
 // Facturación Integral
 use App\Http\Controllers\FacturacionIntegralController;
@@ -751,6 +753,27 @@ Route::group(['prefix' => 'lab-orders', 'as' => 'lab-orders.', 'middleware' => '
     Route::get('/{id}', [LabOrderController::class, 'show'])->name('show');
     Route::put('/{id}/status', [LabOrderController::class, 'updateStatus'])->name('update-status');
     Route::get('/{id}/print', [LabOrderController::class, 'print'])->name('print');
+});
+
+// Rutas de Exámenes de Laboratorio
+Route::group(['prefix' => 'lab-exams', 'as' => 'lab-exams.', 'middleware' => 'auth'], function(){
+    Route::get('/', [LabExamController::class, 'index'])->name('index');
+    Route::get('/data', [LabExamController::class, 'getExams'])->name('data');
+    Route::get('/active', [LabExamController::class, 'getActiveExams'])->name('active');
+    Route::get('/create', [LabExamController::class, 'create'])->name('create');
+    Route::post('/store', [LabExamController::class, 'store'])->name('store');
+    Route::get('/{id}', [LabExamController::class, 'show'])->name('show');
+    Route::put('/{id}', [LabExamController::class, 'update'])->name('update');
+    Route::delete('/{id}', [LabExamController::class, 'destroy'])->name('destroy');
+    Route::patch('/{id}/toggle-status', [LabExamController::class, 'toggleStatus'])->name('toggle-status');
+});
+
+// Rutas de Categorías de Exámenes
+Route::group(['prefix' => 'lab-categories', 'as' => 'lab-categories.', 'middleware' => 'auth'], function(){
+    Route::get('/', [LabExamCategoryController::class, 'index'])->name('index');
+    Route::post('/store', [LabExamCategoryController::class, 'store'])->name('store');
+    Route::put('/{id}', [LabExamCategoryController::class, 'update'])->name('update');
+    Route::delete('/{id}', [LabExamCategoryController::class, 'destroy'])->name('destroy');
 });
 
 // ============================================================================

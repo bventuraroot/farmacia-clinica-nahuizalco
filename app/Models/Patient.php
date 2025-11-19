@@ -51,7 +51,10 @@ class Patient extends Model
      */
     public function getEdadAttribute()
     {
-        return $this->fecha_nacimiento->age;
+        if (!$this->fecha_nacimiento) {
+            return null;
+        }
+        return $this->fecha_nacimiento->diffInYears(now());
     }
 
     /**

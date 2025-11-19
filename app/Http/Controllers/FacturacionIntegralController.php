@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\Product;
+use App\Models\Inventory;
 use App\Models\Appointment;
 use App\Models\MedicalConsultation;
 use App\Models\LabOrder;
@@ -57,11 +58,21 @@ class FacturacionIntegralController extends Controller
             ->limit(50)
             ->get();
 
-        // Productos de farmacia (para venta directa)
-        $productos = Product::where('amountp', '>', 0)
-            ->orderBy('name')
+        // Productos de farmacia (para venta directa) - Usar Inventory en lugar de Product
+        $productos = Inventory::with('product')
+            ->where('quantity', '>', 0)
+            ->orderBy('quantity', 'desc')
             ->limit(100)
-            ->get();
+            ->get()
+            ->map(function($inventory) {
+                return [
+                    'id' => $inventory->product_id,
+                    'name' => $inventory->product->name ?? 'Sin nombre',
+                    'quantity' => $inventory->quantity,
+                    'price' => $inventory->product->pricesale ?? 0,
+                    'product' => $inventory->product
+                ];
+            });
 
         return view('facturacion.integral', compact(
             'tipo',

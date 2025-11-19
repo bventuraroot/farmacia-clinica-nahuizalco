@@ -58,112 +58,19 @@ class PermissionController extends Controller
         //dd($result);
 
         $menu = [
+            // ============================================================
+            // 1. CENTRO DE CONTROL
+            // ============================================================
             [
                 "url" => "/dashboard",
                 "name" => "Centro de Control",
                 "icon" => "menu-icon fa-solid fa-house-medical",
                 "slug" => "dashboard"
             ],
-            [
-                "name" => "Administracion",
-                "icon" => "menu-icon fa-solid fa-shield",
-                "slug" => "user.index",
-                "badge" => ["primary", "3"],
-                "submenu" => [
-                    [
-                        "url" => "/user/index",
-                        "name" => "Usuarios",
-                        "slug" => "user.index"
-                    ],
-                    [
-                        "url" => "/rol/index",
-                        "name" => "Roles",
-                        "slug" => "user.rol.index"
-                    ],
-                    [
-                        "url" => "/permission/index",
-                        "name" => "Permisos",
-                        "slug" => "user.permission.index"
-                    ]
-                ]
-            ],
-            [
-                "url" => "/company/index",
-                "name" => "Empresas",
-                "icon" => "menu-icon fa-solid fa-id-badge",
-                "slug" => "company.index"
-            ],
-            [
-                "url" => "/client/index",
-                "name" => "Clientes",
-                "icon" => "menu-icon fa-solid fa-user-plus",
-                "slug" => "client.index"
-            ],
-            [
-                "name" => "Produccion",
-                "icon" => "menu-icon fa-solid fa-feed",
-                "slug" => "user.index",
-                "badge" => ["primary", "3"],
-                "submenu" => [
-                    [
-                        "url" => "/provider/index",
-                        "name" => "Proveedores",
-                        "slug" => "provider.index"
-                    ],
-                    [
-                        "url" => "/marcas/index",
-                        "name" => "Marcas",
-                        "slug" => "marcas.index"
-                    ],
-                    [
-                        "url" => "/product/index",
-                        "name" => "Productos",
-                        "slug" => "product.index"
-                    ]
 
-                ]
-            ],
-            [
-                "url" => "/presales/index",
-                "name" => "Pre-ventas",
-                "icon" => "menu-icon fa-solid fa-cart-shopping",
-                "slug" => "presales.index"
-            ],
-            [
-                "name" => "Facturación",
-                "icon" => "menu-icon fa-solid fa-file-invoice-dollar",
-                "slug" => "sale.index",
-                "badge" => ["info", "3"],
-                "submenu" => [
-                    [
-                        "url" => "/facturacion-integral",
-                        "name" => "Facturación Integral",
-                        "slug" => "facturacion.integral"
-                    ],
-                    [
-                        "url" => "/sale/create-dynamic",
-                        "name" => "Nueva Venta Farmacia",
-                        "slug" => "sale.create-dynamic"
-                    ],
-                    [
-                        "url" => "/sale/index",
-                        "name" => "Historial de Ventas",
-                        "slug" => "sale.index"
-                    ]
-                ]
-            ],
-            [
-                "url" => "/inventory",
-                "name" => "Inventario",
-                "icon" => "menu-icon fa-solid fa-boxes-packing",
-                "slug" => "inventory.index"
-            ],
-            [
-                "url" => "/purchase/index",
-                "name" => "Compras",
-                "icon" => "menu-icon fa-solid fa-truck",
-                "slug" => "purchase.index"
-            ],
+            // ============================================================
+            // 2. MÓDULOS MÉDICOS
+            // ============================================================
             [
                 "name" => "Clínica Médica",
                 "icon" => "menu-icon fa-solid fa-stethoscope",
@@ -210,115 +117,226 @@ class PermissionController extends Controller
                     ]
                 ]
             ],
+
+            // ============================================================
+            // 3. FARMACIA
+            // ============================================================
             [
-                "url" => "/credit/index",
-                "name" => "Creditos",
-                "icon" => "menu-icon fa-solid fa-credit-card",
-                "slug" => "credit.index"
-            ],
-            [
-                "url" => "/cotizaciones/index",
-                "name" => "Cotizaciones",
-                "icon" => "menu-icon fa-solid fa-file-invoice",
-                "slug" => "cotizaciones.index"
-            ],
-            [
-                "url" => "/ai-chat/",
-                "name" => "Chat IA",
-                "icon" => "menu-icon fa-solid fa-robot",
-                "slug" => "ai-chat"
-            ],
-            [
-                "url" => "/backups",
-                "name" => "Respaldos",
-                "icon" => "menu-icon fa-solid fa-database",
-                "slug" => "backups.index"
-            ],
-            [
-                "url" => "/report/index",
-                "name" => "Reportes",
-                "icon" => "menu-icon fa-solid fa-line-chart",
-                "slug" => "report.index",
-                "badge" => ["primary", "20"],
+                "name" => "Farmacia",
+                "icon" => "menu-icon fa-solid fa-pills",
+                "slug" => "product.index",
+                "badge" => ["primary", "5"],
                 "submenu" => [
                     [
-                        "url" => "/report/sales",
-                        "name" => "Ventas",
-                        "slug" => "report.sales"
+                        "url" => "/product/index",
+                        "name" => "Productos",
+                        "slug" => "product.index"
                     ],
                     [
-                        "url" => "/report/sales-by-client",
-                        "name" => "Ventas por Clientes",
-                        "slug" => "report.sales-by-client"
-                    ],
-                    [
-                        "url" => "/report/contribuyentes",
-                        "name" => "Ventas Contribuyentes",
-                        "slug" => "report.contribuyentes"
-                    ],
-                    [
-                        "url" => "/report/consumidor",
-                        "name" => "Ventas Consumidor",
-                        "slug" => "report.consumidor"
-                    ],
-                    [
-                        "url" => "/report/bookpurchases",
-                        "name" => "Libro de Compras",
-                        "slug" => "report.bookpurchases"
-                    ],
-                    [
-                        "url" => "/report/inventory",
+                        "url" => "/inventory",
                         "name" => "Inventario",
-                        "slug" => "report.inventory"
+                        "slug" => "inventory.index"
                     ],
                     [
-                        "url" => "/report/reportyear",
-                        "name" => "Ventas y compras por año",
-                        "slug" => "report.reportyear"
+                        "url" => "/provider/index",
+                        "name" => "Proveedores",
+                        "slug" => "provider.index"
                     ],
                     [
-                        "url" => "/report/sales-by-provider",
-                        "name" => "Ventas por Proveedor",
-                        "slug" => "report.sales-by-provider"
+                        "url" => "/marcas/index",
+                        "name" => "Marcas",
+                        "slug" => "marcas.index"
                     ],
                     [
-                        "url" => "/report/sales-analysis",
-                        "name" => "Análisis General de Ventas",
-                        "slug" => "report.sales-analysis"
-                    ],
-                    [
-                        "url" => "/report/sales-by-product",
-                        "name" => "Ventas por Producto",
-                        "slug" => "report.sales-by-product"
-                    ],
-                    [
-                        "url" => "/report/inventory-by-category",
-                        "name" => "Inventario por Categoría",
-                        "slug" => "report.inventory-by-category"
-                    ],
-                    [
-                        "url" => "/report/inventory-by-provider",
-                        "name" => "Inventario por Proveedor",
-                        "slug" => "report.inventory-by-provider"
-                    ],
-                    //[
-                       // "url" => "/report/inventory-movements",
-                        //"name" => "Movimientos de Inventario",
-                        //"slug" => "report.inventory-movements"
-                    //],
-                    [
-                        "url" => "/report/inventory-kardex",
-                        "name" => "Kardex (por producto)",
-                        "slug" => "report.inventory-kardex"
+                        "url" => "/purchase/index",
+                        "name" => "Compras",
+                        "slug" => "purchase.index"
                     ]
                 ]
             ],
+
+            // ============================================================
+            // 4. VENTAS Y FACTURACIÓN
+            // ============================================================
             [
-                "url" => "/factmh/index",
-                "name" => "Administracion DTE",
+                "name" => "Ventas y Facturación",
+                "icon" => "menu-icon fa-solid fa-file-invoice-dollar",
+                "slug" => "sale.index",
+                "badge" => ["info", "5"],
+                "submenu" => [
+                    [
+                        "url" => "/facturacion-integral",
+                        "name" => "Facturación Integral",
+                        "slug" => "facturacion.integral"
+                    ],
+                    [
+                        "url" => "/sale/create-dynamic",
+                        "name" => "Nueva Venta Farmacia",
+                        "slug" => "sale.create-dynamic"
+                    ],
+                    [
+                        "url" => "/sale/index",
+                        "name" => "Historial de Ventas",
+                        "slug" => "sale.index"
+                    ],
+                    [
+                        "url" => "/presales/index",
+                        "name" => "Pre-ventas",
+                        "slug" => "presales.index"
+                    ],
+                    [
+                        "url" => "/cotizaciones/index",
+                        "name" => "Cotizaciones",
+                        "slug" => "cotizaciones.index"
+                    ],
+                    [
+                        "url" => "/credit/index",
+                        "name" => "Créditos",
+                        "slug" => "credit.index"
+                    ]
+                ]
+            ],
+
+            // ============================================================
+            // 5. ADMINISTRACIÓN
+            // ============================================================
+            [
+                "name" => "Administración",
+                "icon" => "menu-icon fa-solid fa-shield",
+                "slug" => "user.index",
+                "badge" => ["primary", "5"],
+                "submenu" => [
+                    [
+                        "url" => "/user/index",
+                        "name" => "Usuarios",
+                        "slug" => "user.index"
+                    ],
+                    [
+                        "url" => "/rol/index",
+                        "name" => "Roles",
+                        "slug" => "user.rol.index"
+                    ],
+                    [
+                        "url" => "/permission/index",
+                        "name" => "Permisos",
+                        "slug" => "user.permission.index"
+                    ],
+                    [
+                        "url" => "/company/index",
+                        "name" => "Empresas",
+                        "slug" => "company.index"
+                    ],
+                    [
+                        "url" => "/client/index",
+                        "name" => "Clientes",
+                        "slug" => "client.index"
+                    ]
+                ]
+            ],
+
+            // ============================================================
+            // 6. REPORTES Y ANÁLISIS
+            // ============================================================
+            [
+                "name" => "Reportes y Análisis",
+                "icon" => "menu-icon fa-solid fa-chart-line",
+                "slug" => "report.index",
+                "badge" => ["warning", "13"],
+                "submenu" => [
+                    [
+                        "name" => "Reportes de Ventas",
+                        "icon" => "menu-icon fa-solid fa-cash-register",
+                        "submenu" => [
+                            [
+                                "url" => "/report/sales",
+                                "name" => "Ventas Generales",
+                                "slug" => "report.sales"
+                            ],
+                            [
+                                "url" => "/report/sales-by-client",
+                                "name" => "Ventas por Clientes",
+                                "slug" => "report.sales-by-client"
+                            ],
+                            [
+                                "url" => "/report/sales-by-product",
+                                "name" => "Ventas por Producto",
+                                "slug" => "report.sales-by-product"
+                            ],
+                            [
+                                "url" => "/report/sales-by-provider",
+                                "name" => "Ventas por Proveedor",
+                                "slug" => "report.sales-by-provider"
+                            ],
+                            [
+                                "url" => "/report/sales-analysis",
+                                "name" => "Análisis General de Ventas",
+                                "slug" => "report.sales-analysis"
+                            ],
+                            [
+                                "url" => "/report/contribuyentes",
+                                "name" => "Ventas Contribuyentes",
+                                "slug" => "report.contribuyentes"
+                            ],
+                            [
+                                "url" => "/report/consumidor",
+                                "name" => "Ventas Consumidor",
+                                "slug" => "report.consumidor"
+                            ]
+                        ]
+                    ],
+                    [
+                        "name" => "Reportes de Inventario",
+                        "icon" => "menu-icon fa-solid fa-boxes-packing",
+                        "submenu" => [
+                            [
+                                "url" => "/report/inventory",
+                                "name" => "Inventario General",
+                                "slug" => "report.inventory"
+                            ],
+                            [
+                                "url" => "/report/inventory-by-category",
+                                "name" => "Inventario por Categoría",
+                                "slug" => "report.inventory-by-category"
+                            ],
+                            [
+                                "url" => "/report/inventory-by-provider",
+                                "name" => "Inventario por Proveedor",
+                                "slug" => "report.inventory-by-provider"
+                            ],
+                            [
+                                "url" => "/report/inventory-kardex",
+                                "name" => "Kardex (por producto)",
+                                "slug" => "report.inventory-kardex"
+                            ]
+                        ]
+                    ],
+                    [
+                        "name" => "Reportes Financieros",
+                        "icon" => "menu-icon fa-solid fa-dollar-sign",
+                        "submenu" => [
+                            [
+                                "url" => "/report/bookpurchases",
+                                "name" => "Libro de Compras",
+                                "slug" => "report.bookpurchases"
+                            ],
+                            [
+                                "url" => "/report/reportyear",
+                                "name" => "Ventas y Compras por Año",
+                                "slug" => "report.reportyear"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+
+            // ============================================================
+            // 7. CONFIGURACIÓN DTE
+            // ============================================================
+            [
+                "name" => "Configuración DTE",
                 "icon" => "menu-icon fa-solid fa-satellite-dish",
                 "slug" => "factmh.index",
-                "badge" => ["primary", "9"],
+                "badge" => ["danger", "8"],
                 "submenu" => [
                     [
                         "url" => "/factmh/dashboard",
@@ -326,19 +344,19 @@ class PermissionController extends Controller
                         "slug" => "factmh.dashboard"
                     ],
                     [
-                        "url" => "/factmh/contingencias",
-                        "name" => "Contingencias (Legacy)",
-                        "slug" => "factmh.contingencias"
-                    ],
-                    [
-                        "url" => "/dte/contingencias",
-                        "name" => "Gestión de Contingencias DTE",
-                        "slug" => "dte.contingencias"
-                    ],
-                    [
                         "url" => "/correlativos/",
                         "name" => "Gestión de Correlativos",
                         "slug" => "correlativos.index"
+                    ],
+                    [
+                        "url" => "/dte/contingencias",
+                        "name" => "Gestión de Contingencias",
+                        "slug" => "dte.contingencias"
+                    ],
+                    [
+                        "url" => "/factmh/contingencias",
+                        "name" => "Contingencias (Legacy)",
+                        "slug" => "factmh.contingencias"
                     ],
                     [
                         "url" => "/dte/errores",
@@ -346,19 +364,47 @@ class PermissionController extends Controller
                         "slug" => "dte.errores"
                     ],
                     [
-                        "url" => "/dte/test_crt",
-                        "name" => "Test Certificado",
-                        "slug" => "dte.test_crt"
-                    ],
-                    [
-                        "url" => "/firmador/test",
-                        "name" => "Test Firmador",
-                        "slug" => "firmador.test"
-                    ],
-                    [
                         "url" => "/config/index",
                         "name" => "Configuraciones Ambiente",
                         "slug" => "config.index"
+                    ],
+                    [
+                        "name" => "Herramientas de Prueba",
+                        "icon" => "menu-icon fa-solid fa-vial",
+                        "submenu" => [
+                            [
+                                "url" => "/dte/test_crt",
+                                "name" => "Test Certificado",
+                                "slug" => "dte.test_crt"
+                            ],
+                            [
+                                "url" => "/firmador/test",
+                                "name" => "Test Firmador",
+                                "slug" => "firmador.test"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+
+            // ============================================================
+            // 8. UTILIDADES
+            // ============================================================
+            [
+                "name" => "Utilidades",
+                "icon" => "menu-icon fa-solid fa-tools",
+                "slug" => "backups.index",
+                "badge" => ["secondary", "2"],
+                "submenu" => [
+                    [
+                        "url" => "/backups",
+                        "name" => "Respaldos",
+                        "slug" => "backups.index"
+                    ],
+                    [
+                        "url" => "/ai-chat/",
+                        "name" => "Chat IA",
+                        "slug" => "ai-chat"
                     ]
                 ]
             ]
@@ -384,20 +430,53 @@ class PermissionController extends Controller
                 // Clona el menú principal
                 $filteredItem = $menuItem;
 
-                // Filtra el submenu si existe (incluyendo submenús anidados)
+                // Filtra el submenu si existe (incluyendo submenús anidados de múltiples niveles)
                 if (isset($menuItem['submenu'])) {
                     $filteredSubmenu = [];
                     foreach ($menuItem['submenu'] as $submenuItem) {
-                        // Verifica el permiso para cada subelemento del menú
-                        if (in_array($submenuItem['slug'], array_column($result, 'Permiso'))) {
+                        // Si el submenuItem tiene slug, verificar permiso
+                        // Si no tiene slug (es un grupo), incluir si tiene submenús con permisos
+                        $hasPermission = true;
+                        if (isset($submenuItem['slug'])) {
+                            $hasPermission = in_array($submenuItem['slug'], array_column($result, 'Permiso'));
+                        }
+
+                        if ($hasPermission || isset($submenuItem['submenu'])) {
                             $filteredSubmenuItem = $submenuItem;
 
-                            // Maneja submenús anidados (subnivel)
+                            // Maneja submenús anidados (subnivel 2)
                             if (isset($submenuItem['submenu'])) {
                                 $filteredNestedSubmenu = [];
                                 foreach ($submenuItem['submenu'] as $nestedSubmenuItem) {
-                                    if (in_array($nestedSubmenuItem['slug'], array_column($result, 'Permiso'))) {
-                                        $filteredNestedSubmenu[] = $nestedSubmenuItem;
+                                    // Si el nestedSubmenuItem tiene slug, verificar permiso
+                                    // Si no tiene slug (es un grupo), incluir si tiene submenús con permisos
+                                    $hasNestedPermission = true;
+                                    if (isset($nestedSubmenuItem['slug'])) {
+                                        $hasNestedPermission = in_array($nestedSubmenuItem['slug'], array_column($result, 'Permiso'));
+                                    }
+
+                                    if ($hasNestedPermission || isset($nestedSubmenuItem['submenu'])) {
+                                        $filteredNestedItem = $nestedSubmenuItem;
+
+                                        // Maneja submenús anidados de nivel 3
+                                        if (isset($nestedSubmenuItem['submenu'])) {
+                                            $filteredLevel3Submenu = [];
+                                            foreach ($nestedSubmenuItem['submenu'] as $level3Item) {
+                                                if (isset($level3Item['slug']) && in_array($level3Item['slug'], array_column($result, 'Permiso'))) {
+                                                    $filteredLevel3Submenu[] = $level3Item;
+                                                } elseif (!isset($level3Item['slug'])) {
+                                                    // Si no tiene slug, incluir (puede ser un separador o grupo)
+                                                    $filteredLevel3Submenu[] = $level3Item;
+                                                }
+                                            }
+                                            if (!empty($filteredLevel3Submenu)) {
+                                                $filteredNestedItem['submenu'] = $filteredLevel3Submenu;
+                                            } else {
+                                                unset($filteredNestedItem['submenu']);
+                                            }
+                                        }
+
+                                        $filteredNestedSubmenu[] = $filteredNestedItem;
                                     }
                                 }
                                 // Solo añade el submenu anidado si hay permisos

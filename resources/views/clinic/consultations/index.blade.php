@@ -68,3 +68,100 @@ $configData = Helper::appClasses();
 </div>
 @endsection
 
+@section('page-script')
+<script>
+$(document).ready(function() {
+    // Botón para agregar nueva consulta
+    $('#btnAddConsultation').on('click', function() {
+        window.location.href = '/consultations/create';
+    });
+
+    // Cargar lista de consultas
+    cargarConsultas();
+});
+
+function cargarConsultas() {
+    $.ajax({
+        url: '/consultations/data',
+        method: 'GET',
+        success: function(response) {
+            let html = '';
+            
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(consulta => {
+                    html += `
+                        <tr>
+                            <td><code>${consulta.numero_consulta}</code></td>
+                            <td>
+                                ${new Date(consulta.fecha_hora).toLocaleDateString('es-ES', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            ${consulta.patient ? consulta.patient.primer_nombre.charAt(0) : '?'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">${consulta.patient ? consulta.patient.nombre_completo : 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                ${consulta.doctor ? consulta.doctor.nombre_completo : 'N/A'}
+                                ${consulta.doctor ? `<br><small class="text-muted">${consulta.doctor.especialidad}</small>` : ''}
+                            </td>
+                            <td>
+                                <span class="badge bg-label-info">${consulta.diagnostico_descripcion ? consulta.diagnostico_descripcion.substring(0, 40) + '...' : 'Sin diagnóstico'}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-label-${
+                                    consulta.estado === 'finalizada' ? 'success' : 
+                                    (consulta.estado === 'cancelada' ? 'danger' : 'warning')
+                                }">
+                                    ${consulta.estado.charAt(0).toUpperCase() + consulta.estado.slice(1).replace('_', ' ')}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/consultations/${consulta.id}" class="btn btn-sm btn-outline-info">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a href="/patients/${consulta.patient_id}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fa-solid fa-user"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fa-solid fa-clipboard-list fa-3x text-muted mb-3 d-block"></i>
+                            <p class="text-muted mb-3">No hay consultas registradas</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/consultations/create'">
+                                <i class="fa-solid fa-plus me-1"></i>Registrar Primera Consulta
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            $('#consultationsTable tbody').html(html);
+        },
+        error: function(xhr) {
+            console.error('Error al cargar consultas:', xhr);
+        }
+    });
+}
+</script>
+@endsection
+

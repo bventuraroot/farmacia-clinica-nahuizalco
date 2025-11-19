@@ -8,7 +8,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\CustomResetPasswordNotification;
-
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -54,5 +53,13 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new CustomResetPasswordNotification($token));
+    }
+
+    /**
+     * Relación con el médico (si el usuario es un médico)
+     */
+    public function doctor()
+    {
+        return $this->hasOne(Doctor::class);
     }
 }

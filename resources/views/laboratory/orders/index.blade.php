@@ -139,3 +139,125 @@ $configData = Helper::appClasses();
 </div>
 @endsection
 
+@section('page-script')
+<script>
+$(document).ready(function() {
+    // Botón para agregar nueva orden
+    $('#btnAddOrder').on('click', function() {
+        window.location.href = '/lab-orders/create';
+    });
+
+    // Cargar estadísticas
+    cargarEstadisticas();
+    
+    // Cargar lista de órdenes
+    cargarOrdenes();
+});
+
+function cargarEstadisticas() {
+    $.ajax({
+        url: '/lab-orders/pending-count',
+        method: 'GET',
+        success: function(response) {
+            // Actualizar contadores si la respuesta tiene datos
+            if (response.pendientes !== undefined) {
+                $('.card:eq(0) .card-title').text(response.pendientes || 0);
+            }
+            if (response.en_proceso !== undefined) {
+                $('.card:eq(1) .card-title').text(response.en_proceso || 0);
+            }
+            if (response.completadas_hoy !== undefined) {
+                $('.card:eq(2) .card-title').text(response.completadas_hoy || 0);
+            }
+            if (response.total_mes !== undefined) {
+                $('.card:eq(3) .card-title').text(response.total_mes || 0);
+            }
+        }
+    });
+}
+
+function cargarOrdenes() {
+    $.ajax({
+        url: '/lab-orders/data',
+        method: 'GET',
+        success: function(response) {
+            let html = '';
+            
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(orden => {
+                    const fechaOrden = new Date(orden.fecha_orden);
+                    const fechaFormateada = fechaOrden.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    
+                    html += `
+                        <tr>
+                            <td><code>${orden.numero_orden}</code></td>
+                            <td>${fechaFormateada}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">
+                                        <span class="avatar-initial rounded-circle bg-label-primary">
+                                            ${orden.patient ? orden.patient.primer_nombre.charAt(0) : '?'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">${orden.patient ? orden.patient.nombre_completo : 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                ${orden.doctor ? orden.doctor.nombre_completo : 'Sin médico'}
+                            </td>
+                            <td>
+                                <span class="badge bg-label-info">${orden.exams ? orden.exams.length : 0} exámenes</span>
+                                <br><small class="text-muted">$${parseFloat(orden.total || 0).toFixed(2)}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-label-${
+                                    orden.estado === 'completada' ? 'success' :
+                                    (orden.estado === 'en_proceso' ? 'info' :
+                                    (orden.estado === 'cancelada' ? 'danger' : 'warning'))
+                                }">
+                                    ${orden.estado ? orden.estado.replace('_', ' ').charAt(0).toUpperCase() + orden.estado.replace('_', ' ').slice(1) : 'Pendiente'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/lab-orders/${orden.id}" class="btn btn-sm btn-outline-info">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a href="/lab-orders/${orden.id}/print" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fa-solid fa-print"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fa-solid fa-vial fa-3x text-muted mb-3 d-block"></i>
+                            <p class="text-muted mb-3">No hay órdenes de laboratorio registradas</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/lab-orders/create'">
+                                <i class="fa-solid fa-plus me-1"></i>Crear Primera Orden
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            $('#ordersTable tbody').html(html);
+        },
+        error: function(xhr) {
+            console.error('Error al cargar órdenes:', xhr);
+        }
+    });
+}
+</script>
+@endsection
+

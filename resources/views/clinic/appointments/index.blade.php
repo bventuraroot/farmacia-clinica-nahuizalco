@@ -62,3 +62,76 @@ $configData = Helper::appClasses();
 </div>
 @endsection
 
+@section('page-script')
+<script>
+$(document).ready(function() {
+    // Botón para agregar nueva cita
+    $('#btnAddAppointment').on('click', function() {
+        window.location.href = '/appointments/create';
+    });
+
+    // Inicializar calendario FullCalendar
+    var calendarEl = document.getElementById('calendar');
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: function(fetchInfo, successCallback, failureCallback) {
+                // Cargar citas desde el servidor
+                $.ajax({
+                    url: '/appointments/data',
+                    method: 'GET',
+                    data: {
+                        start: fetchInfo.startStr,
+                        end: fetchInfo.endStr
+                    },
+                    success: function(response) {
+                        var events = [];
+                        if (response.data && response.data.length > 0) {
+                            response.data.forEach(function(appointment) {
+                                var color = 'blue';
+                                if (appointment.estado === 'confirmada') color = 'green';
+                                else if (appointment.estado === 'en_curso') color = 'orange';
+                                else if (appointment.estado === 'cancelada') color = 'red';
+                                
+                                events.push({
+                                    id: appointment.id,
+                                    title: appointment.patient ? appointment.patient.nombre_completo : 'Sin paciente',
+                                    start: appointment.fecha_hora,
+                                    color: color,
+                                    extendedProps: {
+                                        doctor: appointment.doctor ? appointment.doctor.nombre_completo : 'Sin médico',
+                                        estado: appointment.estado,
+                                        codigo: appointment.codigo_cita
+                                    }
+                                });
+                            });
+                        }
+                        successCallback(events);
+                    },
+                    error: function() {
+                        failureCallback();
+                    }
+                });
+            },
+            eventClick: function(info) {
+                // Al hacer clic en una cita, abrir detalles
+                window.location.href = '/appointments/' + info.event.id;
+            },
+            dateClick: function(info) {
+                // Al hacer clic en una fecha, crear nueva cita con esa fecha
+                var fecha = info.dateStr;
+                window.location.href = '/appointments/create?fecha=' + fecha;
+            }
+        });
+        calendar.render();
+    }
+});
+</script>
+@endsection
+

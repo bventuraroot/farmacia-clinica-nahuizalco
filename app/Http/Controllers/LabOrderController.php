@@ -12,6 +12,7 @@ use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class LabOrderController extends Controller
 {
@@ -69,7 +70,21 @@ class LabOrderController extends Controller
     public function create(Request $request)
     {
         $consultation_id = $request->get('consultation_id');
+        $patient_id = $request->get('patient_id');
+        $doctor_id = $request->get('doctor_id');
+        
+        // Si hay consultation_id, cargar desde la consulta
         $consultation = $consultation_id ? MedicalConsultation::with(['patient', 'doctor'])->findOrFail($consultation_id) : null;
+        
+        // Si no hay consulta pero hay patient_id, crear objeto simulado para la vista
+        if (!$consultation && $patient_id) {
+            $consultation = (object)[
+                'patient_id' => $patient_id,
+                'doctor_id' => $doctor_id,
+                'patient' => Patient::find($patient_id),
+                'doctor' => $doctor_id ? Doctor::find($doctor_id) : null,
+            ];
+        }
         
         $patients = Patient::where('estado', 'activo')->get();
         $doctors = Doctor::where('estado', 'activo')->get();
@@ -196,18 +211,37 @@ class LabOrderController extends Controller
     }
 
     /**
-     * Get pending orders count
+     * Get pending orders count and statistics
      */
     public function getPendingCount(Request $request)
     {
         $user = Auth::user();
         $company_id = $request->get('company_id', $user->company_id ?? Company::first()->id);
 
-        $count = LabOrder::where('company_id', $company_id)
-            ->whereIn('estado', ['pendiente', 'muestra_tomada', 'en_proceso'])
+        $pendientes = LabOrder::where('company_id', $company_id)
+            ->where('estado', 'pendiente')
             ->count();
 
-        return response()->json(['count' => $count]);
+        $en_proceso = LabOrder::where('company_id', $company_id)
+            ->where('estado', 'en_proceso')
+            ->count();
+
+        $completadas_hoy = LabOrder::where('company_id', $company_id)
+            ->where('estado', 'completada')
+            ->whereDate('fecha_entrega_real', Carbon::today())
+            ->count();
+
+        $total_mes = LabOrder::where('company_id', $company_id)
+            ->whereMonth('fecha_orden', Carbon::now()->month)
+            ->whereYear('fecha_orden', Carbon::now()->year)
+            ->count();
+
+        return response()->json([
+            'pendientes' => $pendientes,
+            'en_proceso' => $en_proceso,
+            'completadas_hoy' => $completadas_hoy,
+            'total_mes' => $total_mes
+        ]);
     }
 
     /**

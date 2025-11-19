@@ -247,7 +247,7 @@
                 </div>
 
                 <!-- Alertas de Inventario -->
-                @if(count($productosStockBajo) > 0 || count($productosProximosVencer) > 0)
+                @if($productosStockBajo->count() > 0 || $productosProximosVencer->count() > 0)
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
@@ -255,32 +255,32 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                @if(count($productosStockBajo) > 0)
+                                @if($productosStockBajo->count() > 0)
                                 <div class="col-md-6">
                                     <div class="alert alert-danger">
                                         <h6 class="alert-heading"><i class="fa-solid fa-circle-exclamation me-2"></i>Stock Bajo</h6>
                                         <ul class="mb-0">
-                                            @foreach($productosStockBajo->take(5) as $producto)
-                                            <li>{{ $producto->name }} - <strong>{{ $producto->amountp }}</strong> unidades</li>
+                                            @foreach($productosStockBajo->take(5) as $inventory)
+                                            <li>{{ $inventory->name ?? ($inventory->product->name ?? 'Producto') }} - <strong>{{ $inventory->quantity }}</strong> unidades (Mín: {{ $inventory->minimum_stock }})</li>
                                             @endforeach
                                         </ul>
-                                        @if(count($productosStockBajo) > 5)
-                                        <small class="text-muted">y {{ count($productosStockBajo) - 5 }} productos más...</small>
+                                        @if($productosStockBajo->count() > 5)
+                                        <small class="text-muted">y {{ $productosStockBajo->count() - 5 }} productos más...</small>
                                         @endif
                                     </div>
                                 </div>
                                 @endif
-                                @if(count($productosProximosVencer) > 0)
+                                @if($productosProximosVencer->count() > 0)
                                 <div class="col-md-6">
                                     <div class="alert alert-warning">
                                         <h6 class="alert-heading"><i class="fa-solid fa-clock me-2"></i>Próximos a Vencer</h6>
                                         <ul class="mb-0">
-                                            @foreach($productosProximosVencer->take(5) as $producto)
-                                            <li>{{ $producto->name }} - Vence: <strong>{{ \Carbon\Carbon::parse($producto->expiration_date)->format('d/m/Y') }}</strong></li>
+                                            @foreach($productosProximosVencer->take(5) as $inventory)
+                                            <li>{{ $inventory->name ?? ($inventory->product->name ?? 'Producto') }} - Vence: <strong>{{ \Carbon\Carbon::parse($inventory->expiration_date)->format('d/m/Y') }}</strong></li>
                                             @endforeach
                                         </ul>
-                                        @if(count($productosProximosVencer) > 5)
-                                        <small class="text-muted">y {{ count($productosProximosVencer) - 5 }} productos más...</small>
+                                        @if($productosProximosVencer->count() > 5)
+                                        <small class="text-muted">y {{ $productosProximosVencer->count() - 5 }} productos más...</small>
                                         @endif
                                     </div>
                                 </div>
