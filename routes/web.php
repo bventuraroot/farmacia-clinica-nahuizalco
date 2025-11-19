@@ -39,6 +39,18 @@ use App\Http\Controllers\FirmadorController;
 use App\Http\Controllers\CreditNoteController;
 use App\Http\Controllers\DebitNoteController;
 
+// Módulos de Clínica
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\MedicalConsultationController;
+
+// Módulos de Laboratorio
+use App\Http\Controllers\LabOrderController;
+
+// Facturación Integral
+use App\Http\Controllers\FacturacionIntegralController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -55,7 +67,14 @@ Route::get('/', function () {
 });
 
 //Route::get('/dashboard', function () { return view('dashboard');})->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/dashboard', [DashboardController::class, 'home'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Dashboard Central - Hub principal
+Route::get('/dashboard', [DashboardController::class, 'central'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// Dashboards específicos por módulo
+Route::get('/dashboard-farmacia', [DashboardController::class, 'home'])->middleware(['auth', 'verified'])->name('dashboard.farmacia');
+Route::get('/dashboard-clinica', [DashboardController::class, 'home'])->middleware(['auth', 'verified'])->name('dashboard.clinica');
+Route::get('/dashboard-laboratorio', [DashboardController::class, 'home'])->middleware(['auth', 'verified'])->name('dashboard.laboratorio');
 
 
 Route::middleware('auth')->group(function () {
@@ -147,6 +166,17 @@ Route::group(['prefix' => 'permission', 'as' => 'permission.'], function(){
     // Rutas específicas para permisos de respaldos
     Route::post('create-backups-permissions', [PermissionController::class, 'createBackupsPermissions'])->name('create-backups-permissions');
     Route::post('assign-backups-permissions', [PermissionController::class, 'assignBackupsPermissions'])->name('assign-backups-permissions');
+
+    // Rutas específicas para permisos de clínica
+    Route::post('create-clinic-permissions', [PermissionController::class, 'createClinicPermissions'])->name('create-clinic-permissions');
+    Route::post('assign-clinic-permissions', [PermissionController::class, 'assignClinicPermissions'])->name('assign-clinic-permissions');
+
+    // Rutas específicas para permisos de laboratorio
+    Route::post('create-laboratory-permissions', [PermissionController::class, 'createLaboratoryPermissions'])->name('create-laboratory-permissions');
+    Route::post('assign-laboratory-permissions', [PermissionController::class, 'assignLaboratoryPermissions'])->name('assign-laboratory-permissions');
+
+    // Rutas específicas para permisos de facturación integral
+    Route::post('create-facturacion-permissions', [PermissionController::class, 'createFacturacionIntegralPermissions'])->name('create-facturacion-permissions');
 
     });
 
@@ -653,5 +683,91 @@ Route::group(['prefix' => 'firmador', 'as' => 'firmador.'], function(){
     Route::post('test-firma', [FirmadorController::class, 'testFirma'])->name('test-firma');
     Route::get('test-network', [FirmadorController::class, 'testNetwork'])->name('test-network');
 });
+
+// ============================================================================
+// MÓDULO DE CLÍNICA MÉDICA
+// ============================================================================
+
+// Rutas de Pacientes
+Route::group(['prefix' => 'patients', 'as' => 'patients.', 'middleware' => 'auth'], function(){
+    Route::get('/', [PatientController::class, 'index'])->name('index');
+    Route::get('/data', [PatientController::class, 'getPatients'])->name('data');
+    Route::get('/create', [PatientController::class, 'create'])->name('create');
+    Route::post('/store', [PatientController::class, 'store'])->name('store');
+    Route::get('/{id}', [PatientController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [PatientController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [PatientController::class, 'update'])->name('update');
+    Route::delete('/{id}', [PatientController::class, 'destroy'])->name('destroy');
+    Route::get('/search/document', [PatientController::class, 'searchByDocument'])->name('search-document');
+});
+
+// Rutas de Médicos
+Route::group(['prefix' => 'doctors', 'as' => 'doctors.', 'middleware' => 'auth'], function(){
+    Route::get('/', [DoctorController::class, 'index'])->name('index');
+    Route::get('/data', [DoctorController::class, 'getDoctors'])->name('data');
+    Route::get('/active', [DoctorController::class, 'getActiveDoctors'])->name('active');
+    Route::get('/create', [DoctorController::class, 'create'])->name('create');
+    Route::post('/store', [DoctorController::class, 'store'])->name('store');
+    Route::get('/{id}', [DoctorController::class, 'show'])->name('show');
+    Route::get('/{id}/edit', [DoctorController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [DoctorController::class, 'update'])->name('update');
+    Route::delete('/{id}', [DoctorController::class, 'destroy'])->name('destroy');
+});
+
+// Rutas de Citas Médicas
+Route::group(['prefix' => 'appointments', 'as' => 'appointments.', 'middleware' => 'auth'], function(){
+    Route::get('/', [AppointmentController::class, 'index'])->name('index');
+    Route::get('/data', [AppointmentController::class, 'getAppointments'])->name('data');
+    Route::get('/create', [AppointmentController::class, 'create'])->name('create');
+    Route::post('/store', [AppointmentController::class, 'store'])->name('store');
+    Route::get('/{id}', [AppointmentController::class, 'show'])->name('show');
+    Route::put('/{id}/status', [AppointmentController::class, 'updateStatus'])->name('update-status');
+    Route::post('/{id}/cancel', [AppointmentController::class, 'cancel'])->name('cancel');
+});
+
+// Rutas de Consultas Médicas
+Route::group(['prefix' => 'consultations', 'as' => 'consultations.', 'middleware' => 'auth'], function(){
+    Route::get('/', [MedicalConsultationController::class, 'index'])->name('index');
+    Route::get('/data', [MedicalConsultationController::class, 'getConsultations'])->name('data');
+    Route::get('/create', [MedicalConsultationController::class, 'create'])->name('create');
+    Route::post('/store', [MedicalConsultationController::class, 'store'])->name('store');
+    Route::get('/{id}', [MedicalConsultationController::class, 'show'])->name('show');
+    Route::put('/{id}', [MedicalConsultationController::class, 'update'])->name('update');
+    Route::post('/{id}/finalize', [MedicalConsultationController::class, 'finalize'])->name('finalize');
+    Route::get('/patient/{patient_id}/history', [MedicalConsultationController::class, 'patientHistory'])->name('patient-history');
+});
+
+// ============================================================================
+// MÓDULO DE LABORATORIO CLÍNICO
+// ============================================================================
+
+// Rutas de Órdenes de Laboratorio
+Route::group(['prefix' => 'lab-orders', 'as' => 'lab-orders.', 'middleware' => 'auth'], function(){
+    Route::get('/', [LabOrderController::class, 'index'])->name('index');
+    Route::get('/data', [LabOrderController::class, 'getOrders'])->name('data');
+    Route::get('/pending-count', [LabOrderController::class, 'getPendingCount'])->name('pending-count');
+    Route::get('/create', [LabOrderController::class, 'create'])->name('create');
+    Route::post('/store', [LabOrderController::class, 'store'])->name('store');
+    Route::get('/{id}', [LabOrderController::class, 'show'])->name('show');
+    Route::put('/{id}/status', [LabOrderController::class, 'updateStatus'])->name('update-status');
+    Route::get('/{id}/print', [LabOrderController::class, 'print'])->name('print');
+});
+
+// ============================================================================
+// MÓDULO DE FACTURACIÓN INTEGRAL
+// ============================================================================
+
+// Facturación integral - Todos los módulos
+Route::group(['prefix' => 'facturacion', 'as' => 'facturacion.', 'middleware' => 'auth'], function(){
+    Route::get('/integral', [FacturacionIntegralController::class, 'index'])->name('integral');
+    Route::get('/consultas-pendientes', [FacturacionIntegralController::class, 'getConsultasPendientes'])->name('consultas-pendientes');
+    Route::get('/ordenes-lab-pendientes', [FacturacionIntegralController::class, 'getOrdenesLabPendientes'])->name('ordenes-lab-pendientes');
+    Route::post('/consulta/{consultaId}', [FacturacionIntegralController::class, 'facturarConsulta'])->name('facturar-consulta');
+    Route::post('/orden-lab/{ordenId}', [FacturacionIntegralController::class, 'facturarOrdenLab'])->name('facturar-orden-lab');
+    Route::get('/precio-servicio', [FacturacionIntegralController::class, 'getPrecioServicio'])->name('precio-servicio');
+});
+
+// Ruta alternativa más corta
+Route::get('/facturacion-integral', [FacturacionIntegralController::class, 'index'])->middleware('auth')->name('facturacion-integral');
 
 require __DIR__.'/auth.php';

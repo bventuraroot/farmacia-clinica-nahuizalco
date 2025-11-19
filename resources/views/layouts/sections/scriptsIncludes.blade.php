@@ -17,7 +17,7 @@
       themesPath: '',
       defaultShowDropdownOnHover: {{$configData['showDropdownOnHover']}}, // true/false (for horizontal layout only)
       displayCustomizer: {{$configData['displayCustomizer']}},
-      lang: '{{ app()->getLocale() }}',
+      lang: 'en', // Cambiar a 'en' porque 'es' no está soportado por template-customizer
       pathResolver: function(path) {
         var resolvedPaths = {
           // Core stylesheets

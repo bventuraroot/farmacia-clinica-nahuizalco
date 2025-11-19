@@ -59,9 +59,9 @@ class PermissionController extends Controller
 
         $menu = [
             [
-                "url" => "/",
-                "name" => "Home",
-                "icon" => "menu-icon fa-solid fa-home",
+                "url" => "/dashboard",
+                "name" => "Centro de Control",
+                "icon" => "menu-icon fa-solid fa-house-medical",
                 "slug" => "dashboard"
             ],
             [
@@ -130,10 +130,27 @@ class PermissionController extends Controller
                 "slug" => "presales.index"
             ],
             [
-                "url" => "/sale/index",
-                "name" => "Ventas",
-                "icon" => "menu-icon fa-solid fa-dollar",
-                "slug" => "sale.index"
+                "name" => "Facturación",
+                "icon" => "menu-icon fa-solid fa-file-invoice-dollar",
+                "slug" => "sale.index",
+                "badge" => ["info", "3"],
+                "submenu" => [
+                    [
+                        "url" => "/facturacion-integral",
+                        "name" => "Facturación Integral",
+                        "slug" => "facturacion.integral"
+                    ],
+                    [
+                        "url" => "/sale/create-dynamic",
+                        "name" => "Nueva Venta Farmacia",
+                        "slug" => "sale.create-dynamic"
+                    ],
+                    [
+                        "url" => "/sale/index",
+                        "name" => "Historial de Ventas",
+                        "slug" => "sale.index"
+                    ]
+                ]
             ],
             [
                 "url" => "/inventory",
@@ -146,6 +163,52 @@ class PermissionController extends Controller
                 "name" => "Compras",
                 "icon" => "menu-icon fa-solid fa-truck",
                 "slug" => "purchase.index"
+            ],
+            [
+                "name" => "Clínica Médica",
+                "icon" => "menu-icon fa-solid fa-stethoscope",
+                "slug" => "patients.index",
+                "badge" => ["success", "4"],
+                "submenu" => [
+                    [
+                        "url" => "/patients",
+                        "name" => "Pacientes",
+                        "slug" => "patients.index"
+                    ],
+                    [
+                        "url" => "/doctors",
+                        "name" => "Médicos",
+                        "slug" => "doctors.index"
+                    ],
+                    [
+                        "url" => "/appointments",
+                        "name" => "Citas Médicas",
+                        "slug" => "appointments.index"
+                    ],
+                    [
+                        "url" => "/consultations",
+                        "name" => "Consultas",
+                        "slug" => "consultations.index"
+                    ]
+                ]
+            ],
+            [
+                "name" => "Laboratorio Clínico",
+                "icon" => "menu-icon fa-solid fa-flask",
+                "slug" => "lab-orders.index",
+                "badge" => ["info", "2"],
+                "submenu" => [
+                    [
+                        "url" => "/lab-orders",
+                        "name" => "Órdenes de Laboratorio",
+                        "slug" => "lab-orders.index"
+                    ],
+                    [
+                        "url" => "/lab-exams",
+                        "name" => "Catálogo de Exámenes",
+                        "slug" => "lab-exams.index"
+                    ]
+                ]
             ],
             [
                 "url" => "/credit/index",
@@ -855,6 +918,297 @@ return response()->json($menuJson);
             return response()->json([
                 'success' => false,
                 'message' => 'Error al asignar permisos de respaldos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear permisos para el módulo de Clínica
+     */
+    public function createClinicPermissions()
+    {
+        try {
+            $permissions = [
+                // Permisos de Pacientes
+                'patients.index' => 'Ver lista de pacientes',
+                'patients.create' => 'Crear pacientes',
+                'patients.edit' => 'Editar pacientes',
+                'patients.destroy' => 'Eliminar pacientes',
+                'patients.show' => 'Ver detalles de pacientes',
+
+                // Permisos de Médicos
+                'doctors.index' => 'Ver lista de médicos',
+                'doctors.create' => 'Crear médicos',
+                'doctors.edit' => 'Editar médicos',
+                'doctors.destroy' => 'Eliminar médicos',
+                'doctors.show' => 'Ver detalles de médicos',
+
+                // Permisos de Citas
+                'appointments.index' => 'Ver agenda de citas',
+                'appointments.create' => 'Crear citas médicas',
+                'appointments.edit' => 'Editar citas médicas',
+                'appointments.destroy' => 'Eliminar citas médicas',
+                'appointments.show' => 'Ver detalles de citas',
+
+                // Permisos de Consultas Médicas
+                'consultations.index' => 'Ver lista de consultas',
+                'consultations.create' => 'Crear consultas médicas',
+                'consultations.edit' => 'Editar consultas médicas',
+                'consultations.show' => 'Ver detalles de consultas',
+
+                // Permisos de Recetas
+                'prescriptions.index' => 'Ver lista de recetas',
+                'prescriptions.create' => 'Crear recetas médicas',
+                'prescriptions.edit' => 'Editar recetas médicas',
+                'prescriptions.show' => 'Ver detalles de recetas',
+                'prescriptions.dispense' => 'Dispensar medicamentos',
+
+                // Permisos de Expedientes
+                'medical-records.index' => 'Ver expedientes clínicos',
+                'medical-records.create' => 'Crear expedientes clínicos',
+                'medical-records.edit' => 'Editar expedientes clínicos',
+                'medical-records.destroy' => 'Eliminar expedientes clínicos',
+                'medical-records.download' => 'Descargar archivos de expedientes',
+            ];
+
+            $createdPermissions = [];
+            $existingPermissions = [];
+
+            foreach ($permissions as $name => $description) {
+                $existingPermission = Permission::where('name', $name)->first();
+
+                if (!$existingPermission) {
+                    Permission::create([
+                        'name' => $name,
+                        'guard_name' => 'web'
+                    ]);
+                    $createdPermissions[] = $name;
+                } else {
+                    $existingPermissions[] = $name;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos de clínica procesados correctamente',
+                'created' => $createdPermissions,
+                'existing' => $existingPermissions,
+                'total_created' => count($createdPermissions),
+                'total_existing' => count($existingPermissions)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear permisos de clínica: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear permisos para el módulo de Laboratorio
+     */
+    public function createLaboratoryPermissions()
+    {
+        try {
+            $permissions = [
+                // Permisos de Órdenes de Laboratorio
+                'lab-orders.index' => 'Ver lista de órdenes de laboratorio',
+                'lab-orders.create' => 'Crear órdenes de laboratorio',
+                'lab-orders.edit' => 'Editar órdenes de laboratorio',
+                'lab-orders.show' => 'Ver detalles de órdenes',
+                'lab-orders.process' => 'Procesar órdenes de laboratorio',
+                'lab-orders.print' => 'Imprimir órdenes de laboratorio',
+
+                // Permisos de Exámenes
+                'lab-exams.index' => 'Ver catálogo de exámenes',
+                'lab-exams.create' => 'Crear exámenes de laboratorio',
+                'lab-exams.edit' => 'Editar exámenes de laboratorio',
+                'lab-exams.destroy' => 'Eliminar exámenes de laboratorio',
+
+                // Permisos de Resultados
+                'lab-results.index' => 'Ver resultados de laboratorio',
+                'lab-results.create' => 'Crear resultados de laboratorio',
+                'lab-results.edit' => 'Editar resultados de laboratorio',
+                'lab-results.validate' => 'Validar resultados de laboratorio',
+                'lab-results.print' => 'Imprimir resultados de laboratorio',
+
+                // Permisos de Muestras
+                'lab-samples.index' => 'Ver lista de muestras',
+                'lab-samples.create' => 'Registrar toma de muestras',
+                'lab-samples.edit' => 'Editar información de muestras',
+
+                // Permisos de Control de Calidad
+                'lab-quality.index' => 'Ver control de calidad',
+                'lab-quality.create' => 'Registrar control de calidad',
+                'lab-quality.edit' => 'Editar control de calidad',
+
+                // Permisos de Equipos
+                'lab-equipment.index' => 'Ver lista de equipos',
+                'lab-equipment.create' => 'Registrar equipos de laboratorio',
+                'lab-equipment.edit' => 'Editar equipos de laboratorio',
+                'lab-equipment.destroy' => 'Eliminar equipos de laboratorio',
+
+                // Permisos de Reportes de Laboratorio
+                'lab-reports.daily' => 'Ver reportes diarios de laboratorio',
+                'lab-reports.monthly' => 'Ver reportes mensuales de laboratorio',
+                'lab-reports.statistics' => 'Ver estadísticas de laboratorio',
+            ];
+
+            $createdPermissions = [];
+            $existingPermissions = [];
+
+            foreach ($permissions as $name => $description) {
+                $existingPermission = Permission::where('name', $name)->first();
+
+                if (!$existingPermission) {
+                    Permission::create([
+                        'name' => $name,
+                        'guard_name' => 'web'
+                    ]);
+                    $createdPermissions[] = $name;
+                } else {
+                    $existingPermissions[] = $name;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos de laboratorio procesados correctamente',
+                'created' => $createdPermissions,
+                'existing' => $existingPermissions,
+                'total_created' => count($createdPermissions),
+                'total_existing' => count($existingPermissions)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear permisos de laboratorio: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Asignar permisos de clínica a un rol específico
+     */
+    public function assignClinicPermissions(Request $request)
+    {
+        try {
+            $request->validate([
+                'role_id' => 'required|exists:roles,id',
+                'permissions' => 'array'
+            ]);
+
+            $role = Role::findById($request->role_id);
+
+            if (empty($request->permissions)) {
+                $clinicPermissions = Permission::where('name', 'like', 'patients.%')
+                    ->orWhere('name', 'like', 'doctors.%')
+                    ->orWhere('name', 'like', 'appointments.%')
+                    ->orWhere('name', 'like', 'consultations.%')
+                    ->orWhere('name', 'like', 'prescriptions.%')
+                    ->orWhere('name', 'like', 'medical-records.%')
+                    ->pluck('name')->toArray();
+            } else {
+                $clinicPermissions = $request->permissions;
+            }
+
+            $role->syncPermissions(array_merge($role->permissions->pluck('name')->toArray(), $clinicPermissions));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos de clínica asignados correctamente al rol: ' . $role->name,
+                'assigned_permissions' => $clinicPermissions
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar permisos de clínica: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Asignar permisos de laboratorio a un rol específico
+     */
+    public function assignLaboratoryPermissions(Request $request)
+    {
+        try {
+            $request->validate([
+                'role_id' => 'required|exists:roles,id',
+                'permissions' => 'array'
+            ]);
+
+            $role = Role::findById($request->role_id);
+
+            if (empty($request->permissions)) {
+                $labPermissions = Permission::where('name', 'like', 'lab-%')->pluck('name')->toArray();
+            } else {
+                $labPermissions = $request->permissions;
+            }
+
+            $role->syncPermissions(array_merge($role->permissions->pluck('name')->toArray(), $labPermissions));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos de laboratorio asignados correctamente al rol: ' . $role->name,
+                'assigned_permissions' => $labPermissions
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar permisos de laboratorio: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Crear permisos para el módulo de Facturación Integral
+     */
+    public function createFacturacionIntegralPermissions()
+    {
+        try {
+            $permissions = [
+                'facturacion.integral' => 'Acceder a facturación integral',
+                'facturacion.consultas-pendientes' => 'Ver consultas pendientes de facturar',
+                'facturacion.ordenes-lab-pendientes' => 'Ver órdenes de laboratorio pendientes',
+                'facturacion.facturar-consulta' => 'Facturar consultas médicas',
+                'facturacion.facturar-orden-lab' => 'Facturar órdenes de laboratorio',
+            ];
+
+            $createdPermissions = [];
+            $existingPermissions = [];
+
+            foreach ($permissions as $name => $description) {
+                $existingPermission = Permission::where('name', $name)->first();
+
+                if (!$existingPermission) {
+                    Permission::create([
+                        'name' => $name,
+                        'guard_name' => 'web'
+                    ]);
+                    $createdPermissions[] = $name;
+                } else {
+                    $existingPermissions[] = $name;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permisos de facturación integral procesados correctamente',
+                'created' => $createdPermissions,
+                'existing' => $existingPermissions,
+                'total_created' => count($createdPermissions),
+                'total_existing' => count($existingPermissions)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear permisos de facturación integral: ' . $e->getMessage()
             ], 500);
         }
     }

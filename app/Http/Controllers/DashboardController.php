@@ -7,23 +7,72 @@ use App\Models\Product;
 use App\Models\Provider;
 use App\Models\Sale;
 use App\Models\Salesdetail;
+use App\Models\Patient;
+use App\Models\Doctor;
+use App\Models\Appointment;
+use App\Models\MedicalConsultation;
+use App\Models\LabOrder;
+use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
+    /**
+     * Dashboard Central - Hub principal del sistema
+     */
+    public function central()
+    {
+        $user = auth()->user();
+
+        // Estadísticas básicas de farmacia
+        $tclientes = Client::count();
+        $tproducts = Product::count();
+        $totalVentasHoy = $this->getTotalVentasHoy();
+
+        // Estadísticas de clínica
+        $tpacientes = Patient::count();
+        $citasHoy = Appointment::whereDate('fecha_hora', Carbon::today())->count();
+        $citasPendientesHoy = Appointment::whereDate('fecha_hora', Carbon::today())
+            ->whereIn('estado', ['programada', 'confirmada'])
+            ->count();
+        $consultasHoy = MedicalConsultation::whereDate('fecha_hora', Carbon::today())->count();
+
+        // Estadísticas de laboratorio
+        $ordenesLabHoy = LabOrder::whereDate('fecha_orden', Carbon::today())->count();
+        $ordenesPendientes = LabOrder::whereIn('estado', ['pendiente', 'muestra_tomada', 'en_proceso'])->count();
+
+        // Alertas
+        $productosStockBajo = $this->getProductosStockBajo();
+        $productosProximosVencer = $this->getProductosProximosVencer();
+
+        $alertas = [
+            'stockBajo' => count($productosStockBajo),
+            'proximosVencer' => count($productosProximosVencer),
+            'citasPendientes' => $citasPendientesHoy,
+            'ordenesPendientes' => $ordenesPendientes,
+        ];
+
+        return view('dashboard-central', compact(
+            'tclientes', 'tproducts', 'totalVentasHoy',
+            'tpacientes', 'citasHoy', 'citasPendientesHoy', 'consultasHoy',
+            'ordenesLabHoy', 'ordenesPendientes',
+            'alertas'
+        ));
+    }
+
     public function home()
     {
         $user = auth()->user();
 
-        // Estadísticas básicas
+        // ========== ESTADÍSTICAS DE FARMACIA ==========
         $tclientes = Client::count();
         $tproviders = Provider::count();
         $tproducts = Product::count();
         $tsales = Sale::count();
 
-        // Datos para gráficos de ventas - Mejorados para manejar datos vacíos
+        // Datos para gráficos de ventas
         $ventasUltimoAno = $this->getVentasUltimoAno();
         $ventasUltimoMes = $this->getVentasUltimoMes();
         $ventasUltimaSemana = $this->getVentasUltimaSemana();
@@ -32,43 +81,103 @@ class DashboardController extends Controller
         $ventasPorDia = $this->getVentasPorDia();
         $ventasDiarias = $this->getVentasDiarias();
 
-        // Cálculo de totales - Mejorado para manejar valores NULL
+        // Totales de ventas
         $totalVentas = $this->getTotalVentas();
         $totalVentasMes = $this->getTotalVentasMes();
         $totalVentasSemana = $this->getTotalVentasSemana();
         $totalVentasHoy = $this->getTotalVentasHoy();
 
-        // Cálculo de porcentajes de crecimiento
+        // Crecimiento
         $crecimientoVentas = $this->calcularCrecimientoVentas();
         $crecimientoProductos = $this->calcularCrecimientoProductos();
 
-        // Datos adicionales para mejor organización
+        // Inventario y alertas
+        $productosStockBajo = $this->getProductosStockBajo();
+        $productosProximosVencer = $this->getProductosProximosVencer();
+
+        // ========== ESTADÍSTICAS DE CLÍNICA ==========
+        $tpacientes = Patient::count();
+        $tmedicos = Doctor::where('estado', 'activo')->count();
+        $citasHoy = $this->getCitasHoy();
+        $citasPendientesHoy = $this->getCitasPendientesHoy();
+        $consultasHoy = MedicalConsultation::whereDate('fecha_hora', Carbon::today())->count();
+        $consultasMes = MedicalConsultation::whereMonth('fecha_hora', Carbon::now()->month)->count();
+        
+        // Próximas citas
+        $proximasCitas = $this->getProximasCitas();
+        
+        // Estadísticas de pacientes
+        $pacientesNuevosMes = Patient::whereMonth('created_at', Carbon::now()->month)->count();
+        $crecimientoPacientes = $this->calcularCrecimientoPacientes();
+
+        // ========== ESTADÍSTICAS DE LABORATORIO ==========
+        $ordenesLabHoy = LabOrder::whereDate('fecha_orden', Carbon::today())->count();
+        $ordenesPendientes = LabOrder::whereIn('estado', ['pendiente', 'muestra_tomada', 'en_proceso'])->count();
+        $ordenesCompletadasHoy = LabOrder::whereDate('fecha_entrega_real', Carbon::today())->count();
+        $ordenesMes = LabOrder::whereMonth('fecha_orden', Carbon::now()->month)->count();
+        
+        // Órdenes por estado
+        $ordenesPorEstado = $this->getOrdenesPorEstado();
+        
+        // Exámenes más solicitados
+        $examenesMasSolicitados = $this->getExamenesMasSolicitados();
+
+        // ========== RESUMEN INTEGRADO ==========
         $estadisticasGenerales = [
-            'clientes' => $tclientes,
-            'proveedores' => $tproviders,
-            'productos' => $tproducts,
-            'ventas' => $tsales
+            'farmacia' => [
+                'clientes' => $tclientes,
+                'proveedores' => $tproviders,
+                'productos' => $tproducts,
+                'ventas' => $tsales,
+                'ventasHoy' => $totalVentasHoy,
+                'ventasMes' => $totalVentasMes,
+                'crecimiento' => $crecimientoVentas,
+            ],
+            'clinica' => [
+                'pacientes' => $tpacientes,
+                'medicos' => $tmedicos,
+                'citasHoy' => $citasHoy,
+                'consultasHoy' => $consultasHoy,
+                'consultasMes' => $consultasMes,
+                'pacientesNuevosMes' => $pacientesNuevosMes,
+                'crecimiento' => $crecimientoPacientes,
+            ],
+            'laboratorio' => [
+                'ordenesHoy' => $ordenesLabHoy,
+                'pendientes' => $ordenesPendientes,
+                'completadasHoy' => $ordenesCompletadasHoy,
+                'ordenesMes' => $ordenesMes,
+            ]
+        ];
+
+        // Alertas importantes
+        $alertas = [
+            'stockBajo' => $productosStockBajo->count(),
+            'proximosVencer' => $productosProximosVencer->count(),
+            'citasPendientes' => $citasPendientesHoy,
+            'ordenesPendientes' => $ordenesPendientes,
         ];
 
         return view('dashboard', compact(
-            'tclientes',
-            'tproviders',
-            'tproducts',
-            'tsales',
-            'ventasUltimoAno',
-            'ventasUltimoMes',
-            'ventasUltimaSemana',
-            'productosMasVendidos',
-            'ventasPorMes',
-            'ventasPorDia',
-            'ventasDiarias',
-            'totalVentas',
-            'totalVentasMes',
-            'totalVentasSemana',
-            'totalVentasHoy',
-            'crecimientoVentas',
-            'crecimientoProductos',
-            'estadisticasGenerales'
+            // Farmacia
+            'tclientes', 'tproviders', 'tproducts', 'tsales',
+            'ventasUltimoAno', 'ventasUltimoMes', 'ventasUltimaSemana',
+            'productosMasVendidos', 'ventasPorMes', 'ventasPorDia', 'ventasDiarias',
+            'totalVentas', 'totalVentasMes', 'totalVentasSemana', 'totalVentasHoy',
+            'crecimientoVentas', 'crecimientoProductos',
+            'productosStockBajo', 'productosProximosVencer',
+            
+            // Clínica
+            'tpacientes', 'tmedicos', 'citasHoy', 'citasPendientesHoy',
+            'consultasHoy', 'consultasMes', 'proximasCitas',
+            'pacientesNuevosMes', 'crecimientoPacientes',
+            
+            // Laboratorio
+            'ordenesLabHoy', 'ordenesPendientes', 'ordenesCompletadasHoy',
+            'ordenesMes', 'ordenesPorEstado', 'examenesMasSolicitados',
+            
+            // General
+            'estadisticasGenerales', 'alertas'
         ));
     }
 
@@ -299,5 +408,113 @@ class DashboardController extends Controller
             ->whereDate('sales.date', Carbon::now())
             ->sum('salesdetails.pricesale');
         return $total ?: 0;
+    }
+
+    // ==================== MÉTODOS DE CLÍNICA ====================
+
+    /**
+     * Obtener citas del día actual
+     */
+    private function getCitasHoy()
+    {
+        return Appointment::whereDate('fecha_hora', Carbon::today())->count();
+    }
+
+    /**
+     * Obtener citas pendientes del día
+     */
+    private function getCitasPendientesHoy()
+    {
+        return Appointment::whereDate('fecha_hora', Carbon::today())
+            ->whereIn('estado', ['programada', 'confirmada'])
+            ->count();
+    }
+
+    /**
+     * Obtener próximas citas (próximas 24 horas)
+     */
+    private function getProximasCitas()
+    {
+        return Appointment::with(['patient', 'doctor'])
+            ->where('fecha_hora', '>=', Carbon::now())
+            ->where('fecha_hora', '<=', Carbon::now()->addHours(24))
+            ->whereIn('estado', ['programada', 'confirmada'])
+            ->orderBy('fecha_hora')
+            ->limit(5)
+            ->get();
+    }
+
+    /**
+     * Calcular crecimiento de pacientes
+     */
+    private function calcularCrecimientoPacientes()
+    {
+        $pacientesMesActual = Patient::whereMonth('created_at', Carbon::now()->month)->count();
+        $pacientesMesAnterior = Patient::whereMonth('created_at', Carbon::now()->subMonth()->month)->count();
+
+        if ($pacientesMesAnterior > 0) {
+            return round((($pacientesMesActual - $pacientesMesAnterior) / $pacientesMesAnterior) * 100, 1);
+        }
+        return 0;
+    }
+
+    // ==================== MÉTODOS DE LABORATORIO ====================
+
+    /**
+     * Obtener órdenes de laboratorio por estado
+     */
+    private function getOrdenesPorEstado()
+    {
+        return LabOrder::select('estado', DB::raw('count(*) as total'))
+            ->groupBy('estado')
+            ->pluck('total', 'estado')
+            ->toArray();
+    }
+
+    /**
+     * Obtener exámenes más solicitados
+     */
+    private function getExamenesMasSolicitados()
+    {
+        return DB::table('lab_order_exams')
+            ->join('lab_exams', 'lab_order_exams.exam_id', '=', 'lab_exams.id')
+            ->select('lab_exams.nombre', DB::raw('count(*) as cantidad'))
+            ->groupBy('lab_exams.id', 'lab_exams.nombre')
+            ->orderByDesc('cantidad')
+            ->limit(5)
+            ->get();
+    }
+
+    // ==================== MÉTODOS DE INVENTARIO/FARMACIA ====================
+
+    /**
+     * Obtener productos con stock bajo
+     */
+    private function getProductosStockBajo()
+    {
+        return Inventory::with('product')
+            ->whereColumn('quantity', '<=', 'minimum_stock')
+            ->where('quantity', '>', 0)
+            ->where('active', true)
+            ->orderBy('quantity')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Obtener productos próximos a vencer (próximos 30 días)
+     */
+    private function getProductosProximosVencer()
+    {
+        $fechaLimite = Carbon::now()->addDays(30);
+        
+        return Inventory::with('product')
+            ->whereNotNull('expiration_date')
+            ->where('expiration_date', '<=', $fechaLimite)
+            ->where('expiration_date', '>=', Carbon::now())
+            ->where('active', true)
+            ->orderBy('expiration_date')
+            ->limit(10)
+            ->get();
     }
 }
