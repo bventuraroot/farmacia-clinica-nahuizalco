@@ -26,8 +26,6 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-farmacia_clinica}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_USER: ${DB_USERNAME:-farmacia_admin}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-farmacia_2024}
     volumes:
       - dbdata:/var/lib/mysql
     ports:

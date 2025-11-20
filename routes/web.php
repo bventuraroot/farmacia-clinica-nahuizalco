@@ -714,6 +714,7 @@ Route::group(['prefix' => 'doctors', 'as' => 'doctors.', 'middleware' => 'auth']
     Route::get('/{id}/edit', [DoctorController::class, 'edit'])->name('edit');
     Route::put('/{id}', [DoctorController::class, 'update'])->name('update');
     Route::delete('/{id}', [DoctorController::class, 'destroy'])->name('destroy');
+    Route::get('/{id}/available-hours', [DoctorController::class, 'getAvailableHours'])->name('available-hours');
 });
 
 // Rutas de Citas Médicas
@@ -722,6 +723,7 @@ Route::group(['prefix' => 'appointments', 'as' => 'appointments.', 'middleware' 
     Route::get('/data', [AppointmentController::class, 'getAppointments'])->name('data');
     Route::get('/create', [AppointmentController::class, 'create'])->name('create');
     Route::post('/store', [AppointmentController::class, 'store'])->name('store');
+    Route::get('/available-hours', [AppointmentController::class, 'getAvailableHours'])->name('available-hours');
     Route::get('/{id}', [AppointmentController::class, 'show'])->name('show');
     Route::put('/{id}/status', [AppointmentController::class, 'updateStatus'])->name('update-status');
     Route::post('/{id}/cancel', [AppointmentController::class, 'cancel'])->name('cancel');
@@ -781,11 +783,13 @@ Route::group(['prefix' => 'lab-categories', 'as' => 'lab-categories.', 'middlewa
 // ============================================================================
 
 // Facturación integral - Todos los módulos
+// NOTA: Las consultas médicas NO se facturan - solo control clínico
 Route::group(['prefix' => 'facturacion', 'as' => 'facturacion.', 'middleware' => 'auth'], function(){
     Route::get('/integral', [FacturacionIntegralController::class, 'index'])->name('integral');
-    Route::get('/consultas-pendientes', [FacturacionIntegralController::class, 'getConsultasPendientes'])->name('consultas-pendientes');
+    // Rutas deshabilitadas para consultas médicas (no se facturan)
+    // Route::get('/consultas-pendientes', [FacturacionIntegralController::class, 'getConsultasPendientes'])->name('consultas-pendientes');
+    // Route::post('/consulta/{consultaId}', [FacturacionIntegralController::class, 'facturarConsulta'])->name('facturar-consulta');
     Route::get('/ordenes-lab-pendientes', [FacturacionIntegralController::class, 'getOrdenesLabPendientes'])->name('ordenes-lab-pendientes');
-    Route::post('/consulta/{consultaId}', [FacturacionIntegralController::class, 'facturarConsulta'])->name('facturar-consulta');
     Route::post('/orden-lab/{ordenId}', [FacturacionIntegralController::class, 'facturarOrdenLab'])->name('facturar-orden-lab');
     Route::get('/precio-servicio', [FacturacionIntegralController::class, 'getPrecioServicio'])->name('precio-servicio');
 });

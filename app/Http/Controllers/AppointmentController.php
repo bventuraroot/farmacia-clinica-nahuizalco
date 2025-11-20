@@ -114,6 +114,17 @@ class AppointmentController extends Controller
 
         // Verificar disponibilidad del doctor
         $fecha_hora = Carbon::parse($validated['fecha_hora']);
+        $doctor = Doctor::with('activeSchedules')->findOrFail($validated['doctor_id']);
+
+        // Verificar si el médico está disponible según su horario de atención
+        if (!$doctor->isAvailableAt($fecha_hora)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El médico no tiene horario de atención disponible en ese día y hora'
+            ], 422);
+        }
+
+        // Verificar conflictos con otras citas
         $conflicto = Appointment::where('doctor_id', $validated['doctor_id'])
             ->where('estado', '!=', 'cancelada')
             ->where(function ($query) use ($fecha_hora, $validated) {
@@ -216,6 +227,45 @@ class AppointmentController extends Controller
             'no_asistio' => '#6b7280',
             default => '#3788d8'
         };
+    }
+
+    /**
+     * Obtener horarios disponibles de un médico para una fecha
+     */
+    public function getAvailableHours(Request $request)
+    {
+        $doctorId = $request->get('doctor_id');
+        $fecha = $request->get('fecha', now()->format('Y-m-d'));
+
+        if (!$doctorId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debe seleccionar un médico'
+            ], 422);
+        }
+
+        $doctor = Doctor::with('activeSchedules')->findOrFail($doctorId);
+        $horas = $doctor->getAvailableHoursForDate($fecha);
+
+        // Filtrar horas que ya tienen citas
+        $citasExistentes = Appointment::where('doctor_id', $doctorId)
+            ->whereDate('fecha_hora', $fecha)
+            ->where('estado', '!=', 'cancelada')
+            ->get()
+            ->map(function ($cita) {
+                return Carbon::parse($cita->fecha_hora)->format('H:i');
+            })
+            ->toArray();
+
+        $horasDisponibles = array_filter($horas, function ($hora) use ($citasExistentes) {
+            return !in_array($hora, $citasExistentes);
+        });
+
+        return response()->json([
+            'success' => true,
+            'horas' => array_values($horasDisponibles),
+            'schedules' => $doctor->activeSchedules
+        ]);
     }
 }
 

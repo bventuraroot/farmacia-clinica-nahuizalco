@@ -282,9 +282,6 @@ $configData = Helper::appClasses();
                             <button type="submit" class="btn btn-primary me-2">
                                 <i class="fa-solid fa-save me-1"></i>Guardar Consulta
                             </button>
-                            <button type="button" class="btn btn-success me-2" id="btnFinalizarYFacturar">
-                                <i class="fa-solid fa-file-invoice me-1"></i>Guardar y Facturar
-                            </button>
                             <a href="/consultations" class="btn btn-outline-secondary">
                                 <i class="fa-solid fa-times me-1"></i>Cancelar
                             </a>
@@ -456,13 +453,7 @@ $(document).ready(function() {
         window.open(url, '_blank');
     });
 
-    // Botón Finalizar y Facturar
-    $('#btnFinalizarYFacturar').on('click', function() {
-        if (confirm('¿Desea guardar la consulta y proceder a facturarla?')) {
-            $('#formNuevaConsulta').append('<input type="hidden" name="auto_facturar" value="1">');
-            $('#formNuevaConsulta').submit();
-        }
-    });
+    // Las consultas médicas no se facturan - solo control clínico
 });
 </script>
 @endsection

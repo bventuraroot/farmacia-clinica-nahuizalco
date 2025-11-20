@@ -34,7 +34,7 @@
             <span class="text-muted fw-light"><a href="/dashboard" class="text-muted"><i class="fa-solid fa-arrow-left me-2"></i>Dashboard</a> /</span> 
             Facturación Integral
         </h4>
-        <p class="text-muted">Factura servicios de Farmacia, Clínica y Laboratorio desde un solo lugar</p>
+        <p class="text-muted">Factura servicios de Farmacia y Laboratorio desde un solo lugar. La clínica es solo para control de citas, pacientes y consultas médicas.</p>
     </div>
     <div class="col-md-4 text-end">
         <div class="card bg-primary text-white">
@@ -54,15 +54,6 @@
             <button type="button" class="nav-link {{ $tipo == 'farmacia' ? 'active' : '' }}" role="tab" data-bs-toggle="tab" data-bs-target="#navs-farmacia" aria-controls="navs-farmacia">
                 <i class="fa-solid fa-pills tf-icons me-2"></i>
                 Farmacia
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="nav-link {{ $tipo == 'clinica' ? 'active' : '' }}" role="tab" data-bs-toggle="tab" data-bs-target="#navs-clinica" aria-controls="navs-clinica">
-                <i class="fa-solid fa-stethoscope tf-icons me-2"></i>
-                Consultas Médicas
-                @if(count($consultasPorFacturar) > 0)
-                <span class="badge rounded-pill badge-center bg-danger ms-2">{{ count($consultasPorFacturar) }}</span>
-                @endif
             </button>
         </li>
         <li class="nav-item">
@@ -104,91 +95,6 @@
             </div>
         </div>
 
-        <!-- TAB CONSULTAS MÉDICAS -->
-        <div class="tab-pane fade {{ $tipo == 'clinica' ? 'show active' : '' }}" id="navs-clinica" role="tabpanel">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Consultas Médicas por Facturar</h5>
-                        <small class="text-muted">Consultas completadas pendientes de facturación</small>
-                    </div>
-                    <a href="/consultations" class="btn btn-sm btn-outline-primary">
-                        <i class="fa-solid fa-list me-1"></i>Ver Todas las Consultas
-                    </a>
-                </div>
-                <div class="card-body">
-                    @if(count($consultasPorFacturar) > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>No. Consulta</th>
-                                    <th>Fecha</th>
-                                    <th>Paciente</th>
-                                    <th>Médico</th>
-                                    <th>Diagnóstico</th>
-                                    <th class="text-end">Monto</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($consultasPorFacturar as $consulta)
-                                <tr>
-                                    <td>
-                                        <strong>{{ $consulta->numero_consulta }}</strong>
-                                    </td>
-                                    <td>{{ \Carbon\Carbon::parse($consulta->fecha_hora)->format('d/m/Y H:i') }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar avatar-sm me-2">
-                                                <span class="avatar-initial rounded-circle bg-label-primary">
-                                                    {{ substr($consulta->patient->primer_nombre, 0, 1) }}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <div class="fw-semibold">{{ $consulta->patient->nombre_completo }}</div>
-                                                <small class="text-muted">{{ $consulta->patient->documento_identidad }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="fw-semibold">{{ $consulta->doctor->nombre_completo }}</div>
-                                        <small class="text-muted">{{ $consulta->doctor->especialidad }}</small>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-label-info">{{ Str::limit($consulta->diagnostico_descripcion, 30) }}</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <strong class="text-primary">$25.00</strong>
-                                        <br>
-                                        <small class="text-muted">Consulta</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-primary" onclick="facturarConsulta({{ $consulta->id }})">
-                                            <i class="fa-solid fa-file-invoice me-1"></i>Facturar
-                                        </button>
-                                        <a href="/consultations/{{ $consulta->id }}" class="btn btn-sm btn-outline-info" target="_blank">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @else
-                    <div class="text-center py-5">
-                        <i class="fa-solid fa-check-circle fa-4x text-success mb-3 d-block"></i>
-                        <h5>No hay consultas pendientes de facturar</h5>
-                        <p class="text-muted">Todas las consultas han sido facturadas</p>
-                        <a href="/consultations/create" class="btn btn-primary mt-3">
-                            <i class="fa-solid fa-plus me-2"></i>Nueva Consulta
-                        </a>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
 
         <!-- TAB ÓRDENES DE LABORATORIO -->
         <div class="tab-pane fade {{ $tipo == 'laboratorio' ? 'show active' : '' }}" id="navs-laboratorio" role="tabpanel">
@@ -289,7 +195,7 @@
 
 <!-- Estadísticas Rápidas -->
 <div class="row">
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
         <div class="card border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -308,26 +214,7 @@
         </div>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <div class="card border-success">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-1">Consultas Pendientes</h6>
-                        <h4 class="mb-0 text-success">{{ count($consultasPorFacturar) }}</h4>
-                        <small class="text-muted">Por facturar</small>
-                    </div>
-                    <div class="avatar">
-                        <span class="avatar-initial rounded bg-label-success">
-                            <i class="fa-solid fa-stethoscope fa-2x"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-3">
+    <div class="col-md-6 mb-3">
         <div class="card border-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -351,25 +238,7 @@
 
 @section('page-script')
 <script>
-function facturarConsulta(consultaId) {
-    if (confirm('¿Desea facturar esta consulta médica?')) {
-        // Aquí implementar la lógica de facturación
-        fetch(`/facturacion/consulta/${consultaId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Consulta facturada exitosamente');
-                window.location.reload();
-            }
-        });
-    }
-}
+// Las consultas médicas NO se facturan - solo control clínico
 
 function facturarOrdenLab(ordenId) {
     if (confirm('¿Desea facturar esta orden de laboratorio?')) {

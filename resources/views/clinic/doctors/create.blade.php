@@ -41,6 +41,11 @@ $configData = Helper::appClasses();
                             </button>
                         </li>
                         <li class="nav-item">
+                            <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-horarios">
+                                <i class="fa-solid fa-clock me-1"></i>Horarios de Atención
+                            </button>
+                        </li>
+                        <li class="nav-item">
                             <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#tab-contacto">
                                 <i class="fa-solid fa-phone me-1"></i>Contacto
                             </button>
@@ -114,16 +119,65 @@ $configData = Helper::appClasses();
                                 </div>
 
                                 <div class="col-12 mb-3">
-                                    <label class="form-label" for="horario_atencion">Horario de Atención</label>
-                                    <input type="text" class="form-control" id="horario_atencion" name="horario_atencion"
-                                        placeholder="Ej: Lunes a Viernes 8:00 AM - 5:00 PM">
-                                </div>
-
-                                <div class="col-12 mb-3">
                                     <label class="form-label" for="direccion_consultorio">Dirección del Consultorio</label>
                                     <textarea class="form-control" id="direccion_consultorio" name="direccion_consultorio" rows="2"
                                         placeholder="Dirección del consultorio o clínica"></textarea>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB HORARIOS -->
+                        <div class="tab-pane fade" id="tab-horarios" role="tabpanel">
+                            <div class="alert alert-info mb-4">
+                                <h6 class="alert-heading"><i class="fa-solid fa-info-circle me-2"></i>Configurar Horarios de Atención</h6>
+                                <p class="mb-0">Configure los horarios de atención del médico. Solo se podrán agendar citas en los horarios configurados.</p>
+                            </div>
+
+                            <div id="horariosContainer">
+                                @php
+                                $diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+                                @endphp
+                                
+                                @foreach($diasSemana as $dia)
+                                <div class="card mb-3 horario-item" data-dia="{{ $dia }}">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-2">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input horario-activo" type="checkbox" 
+                                                        id="horario_{{ $dia }}_activo" 
+                                                        data-dia="{{ $dia }}">
+                                                    <label class="form-check-label fw-bold" for="horario_{{ $dia }}_activo">
+                                                        {{ ucfirst($dia) }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small">Hora Inicio</label>
+                                                <input type="time" class="form-control horario-inicio" 
+                                                    id="horario_{{ $dia }}_inicio" 
+                                                    data-dia="{{ $dia }}" 
+                                                    disabled>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small">Hora Fin</label>
+                                                <input type="time" class="form-control horario-fin" 
+                                                    id="horario_{{ $dia }}_fin" 
+                                                    data-dia="{{ $dia }}" 
+                                                    disabled>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small">Notas</label>
+                                                <input type="text" class="form-control horario-notas" 
+                                                    id="horario_{{ $dia }}_notas" 
+                                                    data-dia="{{ $dia }}" 
+                                                    placeholder="Opcional" 
+                                                    disabled>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
                             </div>
                         </div>
 
@@ -185,19 +239,58 @@ $(document).ready(function() {
         allowClear: true
     });
 
+    // Habilitar/deshabilitar campos de horario
+    $('.horario-activo').on('change', function() {
+        const dia = $(this).data('dia');
+        const activo = $(this).is(':checked');
+        
+        $(`#horario_${dia}_inicio, #horario_${dia}_fin, #horario_${dia}_notas`).prop('disabled', !activo);
+        
+        if (!activo) {
+            $(`#horario_${dia}_inicio, #horario_${dia}_fin, #horario_${dia}_notas`).val('');
+        }
+    });
+
     // Envío del formulario
     $('#formNuevoMedico').on('submit', function(e) {
         e.preventDefault();
 
-        const formData = $(this).serialize();
-        const submitBtn = $(this).find('button[type="submit"]');
+        const formData = new FormData(this);
+        const horarios = [];
         
+        // Recopilar horarios
+        $('.horario-item').each(function() {
+            const dia = $(this).data('dia');
+            const activo = $(`#horario_${dia}_activo`).is(':checked');
+            
+            if (activo) {
+                const inicio = $(`#horario_${dia}_inicio`).val();
+                const fin = $(`#horario_${dia}_fin`).val();
+                
+                if (inicio && fin) {
+                    horarios.push({
+                        dia_semana: dia,
+                        hora_inicio: inicio,
+                        hora_fin: fin,
+                        activo: true,
+                        notas: $(`#horario_${dia}_notas`).val() || null
+                    });
+                }
+            }
+        });
+        
+        // Agregar horarios al FormData
+        formData.append('horarios', JSON.stringify(horarios));
+        
+        const submitBtn = $(this).find('button[type="submit"]');
         submitBtn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i>Guardando...');
 
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 if (response.success) {
                     Swal.fire({

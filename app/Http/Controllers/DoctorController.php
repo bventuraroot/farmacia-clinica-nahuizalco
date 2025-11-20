@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Doctor;
+use App\Models\DoctorSchedule;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DoctorController extends Controller
 {
@@ -90,13 +92,49 @@ class DoctorController extends Controller
         $validated['codigo_medico'] = 'MED-' . strtoupper(uniqid());
         $validated['estado'] = 'activo';
 
-        $doctor = Doctor::create($validated);
+        DB::beginTransaction();
+        try {
+            $doctor = Doctor::create($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Médico creado exitosamente',
-            'doctor' => $doctor
-        ]);
+            // Guardar horarios si vienen en el request
+            $horariosData = $request->input('horarios');
+            if ($horariosData) {
+                // Si viene como JSON string, decodificarlo
+                if (is_string($horariosData)) {
+                    $horariosData = json_decode($horariosData, true);
+                }
+                
+                if (is_array($horariosData)) {
+                    foreach ($horariosData as $horario) {
+                        if (!empty($horario['dia_semana']) && !empty($horario['hora_inicio']) && !empty($horario['hora_fin'])) {
+                            DoctorSchedule::create([
+                                'doctor_id' => $doctor->id,
+                                'dia_semana' => $horario['dia_semana'],
+                                'hora_inicio' => $horario['hora_inicio'],
+                                'hora_fin' => $horario['hora_fin'],
+                                'activo' => $horario['activo'] ?? true,
+                                'notas' => $horario['notas'] ?? null,
+                                'company_id' => $doctor->company_id,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Médico creado exitosamente',
+                'doctor' => $doctor->load('schedules')
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el médico: ' . $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
@@ -104,7 +142,7 @@ class DoctorController extends Controller
      */
     public function show($id)
     {
-        $doctor = Doctor::with(['appointments', 'consultations'])->findOrFail($id);
+        $doctor = Doctor::with(['appointments', 'consultations', 'schedules'])->findOrFail($id);
         
         return view('clinic.doctors.show', compact('doctor'));
     }
@@ -114,7 +152,7 @@ class DoctorController extends Controller
      */
     public function edit($id)
     {
-        $doctor = Doctor::findOrFail($id);
+        $doctor = Doctor::with('schedules')->findOrFail($id);
         $users = User::whereDoesntHave('doctor')->orWhere('id', $doctor->user_id)->get();
         
         return view('clinic.doctors.edit', compact('doctor', 'users'));
@@ -141,13 +179,53 @@ class DoctorController extends Controller
             'estado' => 'required|in:activo,inactivo,suspendido',
         ]);
 
-        $doctor->update($validated);
+        DB::beginTransaction();
+        try {
+            $doctor->update($validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Médico actualizado exitosamente',
-            'doctor' => $doctor
-        ]);
+            // Actualizar horarios
+            $horariosData = $request->input('horarios');
+            if ($horariosData) {
+                // Si viene como JSON string, decodificarlo
+                if (is_string($horariosData)) {
+                    $horariosData = json_decode($horariosData, true);
+                }
+                
+                if (is_array($horariosData)) {
+                    // Eliminar horarios existentes
+                    $doctor->schedules()->delete();
+                    
+                    // Crear nuevos horarios
+                    foreach ($horariosData as $horario) {
+                        if (!empty($horario['dia_semana']) && !empty($horario['hora_inicio']) && !empty($horario['hora_fin'])) {
+                            DoctorSchedule::create([
+                                'doctor_id' => $doctor->id,
+                                'dia_semana' => $horario['dia_semana'],
+                                'hora_inicio' => $horario['hora_inicio'],
+                                'hora_fin' => $horario['hora_fin'],
+                                'activo' => $horario['activo'] ?? true,
+                                'notas' => $horario['notas'] ?? null,
+                                'company_id' => $doctor->company_id,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Médico actualizado exitosamente',
+                'doctor' => $doctor->load('schedules')
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el médico: ' . $e->getMessage()
+            ], 422);
+        }
     }
 
     /**
@@ -178,6 +256,23 @@ class DoctorController extends Controller
             ->get(['id', 'nombres', 'apellidos', 'especialidad']);
 
         return response()->json($doctors);
+    }
+
+    /**
+     * Obtener horarios disponibles de un médico para una fecha
+     */
+    public function getAvailableHours(Request $request, $doctorId)
+    {
+        $doctor = Doctor::with('activeSchedules')->findOrFail($doctorId);
+        $fecha = $request->get('fecha', now()->format('Y-m-d'));
+
+        $horas = $doctor->getAvailableHoursForDate($fecha);
+
+        return response()->json([
+            'success' => true,
+            'horas' => $horas,
+            'schedules' => $doctor->activeSchedules
+        ]);
     }
 }
 

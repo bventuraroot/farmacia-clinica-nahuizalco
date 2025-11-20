@@ -61,7 +61,7 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 40px 0;
-    margin: -25px -25px 30px -25px;
+    margin: 10px -25px 30px -25px;
     border-radius: 0;
 }
 </style>

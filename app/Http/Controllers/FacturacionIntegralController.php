@@ -38,15 +38,8 @@ class FacturacionIntegralController extends Controller
             ->whereDate('sales.date', Carbon::today())
             ->sum('salesdetails.pricesale') ?: 0;
 
-        // Órdenes de clínica por facturar (consultas completadas sin factura)
-        $consultasPorFacturar = MedicalConsultation::with(['patient', 'doctor'])
-            ->where('estado', 'finalizada')
-            ->whereDoesntHave('patient', function($query) {
-                // Aquí puedes agregar lógica para verificar si ya fue facturada
-            })
-            ->orderBy('fecha_hora', 'desc')
-            ->limit(50)
-            ->get();
+        // Las consultas médicas NO se facturan - solo control clínico
+        $consultasPorFacturar = collect([]);
 
         // Órdenes de laboratorio por facturar (completadas sin factura)
         $ordenesLabPorFacturar = LabOrder::with(['patient', 'doctor', 'exams.exam'])
@@ -86,15 +79,12 @@ class FacturacionIntegralController extends Controller
 
     /**
      * Obtener consultas médicas pendientes de facturar
+     * NOTA: Las consultas médicas NO se facturan - solo control clínico
      */
     public function getConsultasPendientes()
     {
-        $consultas = MedicalConsultation::with(['patient', 'doctor'])
-            ->where('estado', 'finalizada')
-            ->orderBy('fecha_hora', 'desc')
-            ->get();
-
-        return response()->json($consultas);
+        // Las consultas médicas no se facturan
+        return response()->json([]);
     }
 
     /**
@@ -112,28 +102,14 @@ class FacturacionIntegralController extends Controller
 
     /**
      * Crear factura desde consulta médica
+     * NOTA: Las consultas médicas NO se facturan - solo control clínico
      */
     public function facturarConsulta(Request $request, $consultaId)
     {
-        $consulta = MedicalConsultation::with(['patient', 'doctor'])->findOrFail($consultaId);
-
-        // Crear venta para la consulta
-        $sale = Sale::create([
-            'client_id' => $consulta->patient->id, // Asumiendo que paciente puede ser cliente
-            'user_id' => auth()->id(),
-            'company_id' => $consulta->company_id,
-            'date' => now(),
-            'num_document' => $this->generateInvoiceNumber(),
-            'type_document' => 'Factura Consulta',
-            'state' => 1,
-            // Agregar otros campos necesarios según tu estructura
-        ]);
-
         return response()->json([
-            'success' => true,
-            'message' => 'Consulta facturada exitosamente',
-            'sale_id' => $sale->id
-        ]);
+            'success' => false,
+            'message' => 'Las consultas médicas no se facturan. El módulo de clínica es solo para control de citas, pacientes y consultas médicas.'
+        ], 403);
     }
 
     /**
@@ -180,9 +156,8 @@ class FacturacionIntegralController extends Controller
         $id = $request->get('id');
 
         if ($tipo === 'consulta') {
-            // Obtener precio de consulta según especialidad o configuración
-            $precioBase = 25.00; // Precio base de consulta
-            return response()->json(['precio' => $precioBase]);
+            // Las consultas médicas no se facturan
+            return response()->json(['precio' => 0]);
         }
 
         if ($tipo === 'laboratorio') {

@@ -91,8 +91,21 @@ $configData = Helper::appClasses();
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label class="form-label" for="fecha_hora">Fecha y Hora <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control flatpickr-datetime" id="fecha_hora" name="fecha_hora" required>
+                            <label class="form-label" for="fecha_cita">Fecha <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="fecha_cita" name="fecha_cita" required>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="hora_cita">Hora Disponible <span class="text-danger">*</span></label>
+                            <select class="form-select" id="hora_cita" name="hora_cita" required disabled>
+                                <option value="">Primero seleccione médico y fecha</option>
+                            </select>
+                            <small class="text-muted" id="horarios-info"></small>
+                        </div>
+
+                        <div class="col-md-4 mb-3 d-none">
+                            <label class="form-label" for="fecha_hora">Fecha y Hora Completa</label>
+                            <input type="text" class="form-control" id="fecha_hora" name="fecha_hora" required>
                         </div>
 
                         <div class="col-md-4 mb-3">
@@ -213,27 +226,69 @@ $(document).ready(function() {
         const selectedOption = $(this).find(':selected');
         $('#doctor_especialidad').val(selectedOption.data('especialidad') || '');
         
-        // Verificar disponibilidad si hay fecha seleccionada
-        verificarDisponibilidad();
-    });
-
-    // Verificar disponibilidad al cambiar fecha/hora
-    $('#fecha_hora').on('change', function() {
-        verificarDisponibilidad();
-    });
-
-    // Función para verificar disponibilidad del médico
-    function verificarDisponibilidad() {
-        const doctorId = $('#doctor_id').val();
-        const fechaHora = $('#fecha_hora').val();
-
-        if (doctorId && fechaHora) {
-            // Aquí puedes implementar una llamada AJAX para verificar disponibilidad
-            $('#alertaDisponibilidad').removeClass('d-none alert-danger alert-success')
-                .addClass('alert-info');
-            $('#mensajeDisponibilidad').text('Verificando disponibilidad del médico...');
+        // Cargar horarios disponibles si hay fecha seleccionada
+        if ($('#fecha_cita').val()) {
+            cargarHorariosDisponibles();
         }
+    });
+
+    // Cargar horarios disponibles al cambiar fecha
+    $('#fecha_cita').on('change', function() {
+        if ($('#doctor_id').val()) {
+            cargarHorariosDisponibles();
+        } else {
+            $('#hora_cita').html('<option value="">Primero seleccione un médico</option>').prop('disabled', true);
+        }
+    });
+
+    // Función para cargar horarios disponibles
+    function cargarHorariosDisponibles() {
+        const doctorId = $('#doctor_id').val();
+        const fecha = $('#fecha_cita').val();
+
+        if (!doctorId || !fecha) {
+            return;
+        }
+
+        $('#hora_cita').html('<option value="">Cargando horarios...</option>').prop('disabled', true);
+        $('#horarios-info').text('Cargando horarios disponibles...');
+
+        $.ajax({
+            url: '/appointments/available-hours',
+            method: 'GET',
+            data: {
+                doctor_id: doctorId,
+                fecha: fecha
+            },
+            success: function(response) {
+                if (response.success && response.horas && response.horas.length > 0) {
+                    let options = '<option value="">Seleccione una hora</option>';
+                    response.horas.forEach(function(hora) {
+                        options += `<option value="${hora}">${hora}</option>`;
+                    });
+                    $('#hora_cita').html(options).prop('disabled', false);
+                    $('#horarios-info').text(`${response.horas.length} horarios disponibles`);
+                } else {
+                    $('#hora_cita').html('<option value="">No hay horarios disponibles para esta fecha</option>').prop('disabled', true);
+                    $('#horarios-info').text('El médico no tiene horario configurado para este día');
+                }
+            },
+            error: function() {
+                $('#hora_cita').html('<option value="">Error al cargar horarios</option>').prop('disabled', true);
+                $('#horarios-info').text('Error al cargar horarios');
+            }
+        });
     }
+
+    // Actualizar campo fecha_hora cuando se selecciona hora
+    $('#hora_cita').on('change', function() {
+        const fecha = $('#fecha_cita').val();
+        const hora = $(this).val();
+        
+        if (fecha && hora) {
+            $('#fecha_hora').val(fecha + ' ' + hora + ':00');
+        }
+    });
 
     // Envío del formulario
     $('#formNuevaCita').on('submit', function(e) {
